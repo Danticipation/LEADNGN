@@ -52,8 +52,13 @@ class SQLStorageAdapter:
             chatbot: The chatbot instance
             **kwargs: Additional arguments including database_uri
         """
+        import os
+        
         self.chatbot = chatbot
-        self.database_uri = kwargs.get('database_uri', 'sqlite:///db.sqlite3')
+        # Use PostgreSQL database by default if DATABASE_URL is set
+        self.database_uri = kwargs.get('database_uri', os.environ.get('DATABASE_URL', 'sqlite:///db.sqlite3'))
+        
+        # Create PostgreSQL compatible engine
         self.engine = create_engine(self.database_uri)
         self.Session = sessionmaker(bind=self.engine)
         
@@ -208,3 +213,48 @@ class SQLStorageAdapter:
             session.commit()
             
         session.close()
+        
+    def filter(self, **kwargs):
+        """
+        Filter statements based on the given criteria.
+        This is required by some logic adapters.
+        
+        Args:
+            **kwargs: Keyword arguments to filter by
+            
+        Returns:
+            list: List of matching statements
+        """
+        from .conversation import Statement as MBStatement
+        
+        session = self.Session()
+        query = session.query(Statement)
+        
+        # Apply filters for each kwarg
+        for key, value in kwargs.items():
+            if hasattr(Statement, key):
+                query = query.filter(getattr(Statement, key) == value)
+                
+        results = query.all()
+        
+        # Convert to MirrorBot Statement objects
+        statement_objects = []
+        for statement in results:
+            statement_obj = MBStatement(
+                text=statement.text,
+                in_response_to=statement.in_response_to
+            )
+            statement_obj.id = statement.id
+            statement_obj.search_text = statement.search_text
+            statement_obj.conversation = statement.conversation
+            statement_obj.persona = statement.persona
+            statement_obj.created_at = statement.created_at
+            
+            # Add tags
+            for tag in statement.get_tags():
+                statement_obj.add_tags(tag)
+                
+            statement_objects.append(statement_obj)
+            
+        session.close()
+        return statement_objects
