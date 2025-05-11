@@ -169,13 +169,23 @@ function handleVoiceError(event) {
             voiceStatus.textContent = 'Microphone permission denied.';
             break;
         case 'network':
-            voiceStatus.textContent = 'Network error. This may not work in all environments.';
+            voiceStatus.textContent = 'Voice input unavailable in this environment';
             // Disable voice input in environments where it doesn't work
             voiceInputButton.disabled = true;
             voiceInputButton.classList.add('btn-secondary');
             voiceInputButton.classList.remove('btn-outline-secondary');
             voiceInputButton.classList.remove('btn-danger');
-            voiceInputButton.title = 'Voice input not available in this environment';
+            voiceInputButton.title = 'Voice recognition is not available in the Replit environment';
+            
+            // Show a more visible message
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'alert alert-info mt-2 small';
+            errorMsg.innerHTML = '<i class="fas fa-info-circle"></i> Voice input is not available in this environment, but voice output still works.';
+            
+            // Only add the message if it doesn't exist yet
+            if (!document.querySelector('.voice-controls .alert')) {
+                document.querySelector('.voice-controls').appendChild(errorMsg);
+            }
             break;
         default:
             voiceStatus.textContent = `Error: ${event.error}`;

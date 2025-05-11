@@ -28,7 +28,13 @@ class Statement(Base):
     
     def get_tags(self):
         """Return the list of tags."""
-        return json.loads(self.tags)
+        if not self.tags:
+            return []
+        # Handle the case where self.tags might be the Column object itself
+        tags_value = self.tags
+        if not isinstance(tags_value, str):
+            tags_value = '[]'
+        return json.loads(tags_value)
     
     def add_tags(self, *tags):
         """Add a list of tags to the statement."""
