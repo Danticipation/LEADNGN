@@ -1,11 +1,12 @@
 """
-ChatterBot is a machine learning, conversational dialog engine.
+MirrorBot is a machine learning, conversational dialog engine based on ChatterBot.
 """
-from .chatterbot import ChatBot
+from .mirrorbot_UPDATED import ChatBot
+from .conversation_UPDATED import Statement
 
-
-__version__ = '1.2.7'
+__version__ = '1.3.0'
 
 __all__ = (
     'ChatBot',
+    'Statement',
 )

@@ -1,0 +1,220 @@
+/* Custom styles for MirrorBot interface */
+
+/* Main container with mirror effect */
+.mirror-container {
+    background: linear-gradient(135deg, rgba(25, 25, 25, 0.8), rgba(35, 35, 35, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+/* Chat area styling */
+.chat-container {
+    height: 60vh;
+    overflow-y: auto;
+    padding: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.chat-container::-webkit-scrollbar {
+    width: 5px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+}
+
+/* Message styling */
+.message {
+    margin-bottom: 1rem;
+    max-width: 80%;
+    padding: 0.75rem 1rem;
+    border-radius: 15px;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.user-message {
+    background-color: var(--bs-primary);
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 0;
+}
+
+.bot-message {
+    background-color: var(--bs-dark);
+    color: white;
+    margin-right: auto;
+    border-bottom-left-radius: 0;
+}
+
+/* Input area styling */
+.input-container {
+    background-color: rgba(30, 30, 30, 0.7);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+#user-input {
+    background-color: rgba(40, 40, 40, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+/* Mode selection styling */
+.mode-indicator {
+    background-color: rgba(30, 30, 30, 0.7);
+    border-radius: 50px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85rem;
+    color: white;
+    margin-bottom: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+.mode-indicator i {
+    margin-right: 0.5rem;
+}
+
+.mode-select {
+    color: var(--bs-light);
+    background-color: rgba(40, 40, 40, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    padding: 0.5rem;
+}
+
+/* Mode colors */
+.mode-imitation {
+    border-left: 3px solid #6610f2;
+}
+
+.mode-literal {
+    border-left: 3px solid #20c997;
+}
+
+.mode-echo {
+    border-left: 3px solid #fd7e14;
+}
+
+.mode-overunderstanding {
+    border-left: 3px solid #d63384;
+}
+
+.mode-nonsense {
+    border-left: 3px solid #0dcaf0;
+}
+
+/* Learning meter styling */
+.learning-container {
+    background-color: rgba(30, 30, 30, 0.7);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.learning-stage {
+    font-size: 0.9rem;
+    color: var(--bs-light);
+    margin-bottom: 0.5rem;
+}
+
+.progress {
+    height: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Word cloud styling */
+.vocabulary-container {
+    margin-top: 1rem;
+}
+
+.word-item {
+    display: inline-block;
+    margin: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background-color: rgba(40, 40, 40, 0.7);
+    border-radius: 15px;
+    font-size: 0.85rem;
+    color: white;
+}
+
+/* Animation effects */
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: var(--bs-dark);
+    border-radius: 15px;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.typing-indicator span {
+    height: 8px;
+    width: 8px;
+    margin: 0 2px;
+    background-color: #9E9EA1;
+    display: block;
+    border-radius: 50%;
+    opacity: 0.4;
+}
+
+.typing-indicator span:nth-of-type(1) {
+    animation: pulse 1s infinite 0.1s;
+}
+
+.typing-indicator span:nth-of-type(2) {
+    animation: pulse 1s infinite 0.2s;
+}
+
+.typing-indicator span:nth-of-type(3) {
+    animation: pulse 1s infinite 0.3s;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+    100% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .message {
+        max-width: 90%;
+    }
+    
+    .chat-container {
+        height: 50vh;
+    }
+}
