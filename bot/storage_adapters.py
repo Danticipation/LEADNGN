@@ -44,10 +44,15 @@ class SQLStorageAdapter:
     SQLAlchemy storage adapter for the MirrorBot.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self, chatbot=None, **kwargs):
         """
         Initialize the adapter with the given database URI.
+        
+        Args:
+            chatbot: The chatbot instance
+            **kwargs: Additional arguments including database_uri
         """
+        self.chatbot = chatbot
         self.database_uri = kwargs.get('database_uri', 'sqlite:///db.sqlite3')
         self.engine = create_engine(self.database_uri)
         self.Session = sessionmaker(bind=self.engine)
