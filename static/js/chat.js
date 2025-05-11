@@ -115,10 +115,28 @@ function addMessageToChat(sender, content) {
     const currentMode = modeSelect.value;
     messageDiv.classList.add(`mode-${currentMode}`);
     
-    // Add bot icon for bot messages
+    // For bot messages: add icon and speak text if voice output is enabled
     if (sender === 'bot') {
         const modeIcon = modeIcons[currentMode] || 'fas fa-robot';
+        
+        // Add voice button for bot messages
+        const speakButton = document.createElement('button');
+        speakButton.className = 'speak-button';
+        speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+        speakButton.title = 'Speak this message';
+        speakButton.onclick = function() {
+            if (window.speakText) {
+                window.speakText(content);
+            }
+        };
+        
         messageDiv.innerHTML = `<i class="${modeIcon}"></i> ${content}`;
+        messageDiv.appendChild(speakButton);
+        
+        // Auto-speak if voice output is enabled
+        if (window.speakText && document.getElementById('voice-output-toggle')?.checked) {
+            window.speakText(content);
+        }
     } else {
         messageDiv.textContent = content;
     }
