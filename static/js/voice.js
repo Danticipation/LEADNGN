@@ -168,6 +168,15 @@ function handleVoiceError(event) {
         case 'not-allowed':
             voiceStatus.textContent = 'Microphone permission denied.';
             break;
+        case 'network':
+            voiceStatus.textContent = 'Network error. This may not work in all environments.';
+            // Disable voice input in environments where it doesn't work
+            voiceInputButton.disabled = true;
+            voiceInputButton.classList.add('btn-secondary');
+            voiceInputButton.classList.remove('btn-outline-secondary');
+            voiceInputButton.classList.remove('btn-danger');
+            voiceInputButton.title = 'Voice input not available in this environment';
+            break;
         default:
             voiceStatus.textContent = `Error: ${event.error}`;
     }

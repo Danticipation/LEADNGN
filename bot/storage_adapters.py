@@ -19,7 +19,7 @@ class Statement(Base):
     id = Column(Integer, primary_key=True)
     text = Column(String(255), nullable=False)
     search_text = Column(String(255), nullable=False)
-    conversation = Column(String(32), nullable=False)
+    conversation = Column(String(36), nullable=False)  # UUID with dashes is 36 chars
     persona = Column(String(50), nullable=True)
     tags = Column(Text, default='[]')  # Stored as JSON string
     in_response_to = Column(String(255), nullable=True)
