@@ -89,14 +89,14 @@ class SpeechPatternLearner:
                     if not existing.example:
                         existing.example = text
                 else:
-                    pattern = self.SpeechPattern(
-                        conversation_id=conversation_id,
-                        pattern=ngram,
-                        pattern_type=f"{n}-gram",
-                        frequency=1,
-                        mode=mode,
-                        example=text
-                    )
+                    # Create new pattern object
+                    pattern = self.SpeechPattern()
+                    pattern.conversation_id = conversation_id
+                    pattern.pattern = ngram
+                    pattern.pattern_type = f"{n}-gram"
+                    pattern.frequency = 1
+                    pattern.mode = mode
+                    pattern.example = text
                     self.db.session.add(pattern)
     
     def _learn_pos_patterns(self, doc, conversation_id: str, mode: str, min_length: int = 3) -> None:
@@ -133,14 +133,14 @@ class SpeechPatternLearner:
             if not existing.example:
                 existing.example = doc.text
         else:
-            pattern = self.SpeechPattern(
-                conversation_id=conversation_id,
-                pattern=pos_pattern,
-                pattern_type="pos_sequence",
-                frequency=1,
-                mode=mode,
-                example=doc.text
-            )
+            # Create new pattern object
+            pattern = self.SpeechPattern()
+            pattern.conversation_id = conversation_id
+            pattern.pattern = pos_pattern
+            pattern.pattern_type = "pos_sequence"
+            pattern.frequency = 1
+            pattern.mode = mode
+            pattern.example = doc.text
             self.db.session.add(pattern)
     
     def _learn_phrase_templates(self, doc, conversation_id: str, mode: str) -> None:
@@ -183,14 +183,14 @@ class SpeechPatternLearner:
             existing.frequency += 1
             existing.last_seen = None  # Will be updated automatically
         else:
-            template_obj = self.PhraseTemplate(
-                conversation_id=conversation_id,
-                template=template,
-                pos_structure=pos_structure_json,
-                frequency=1,
-                mode=mode,
-                example=doc.text
-            )
+            # Create new template object
+            template_obj = self.PhraseTemplate()
+            template_obj.conversation_id = conversation_id
+            template_obj.template = template
+            template_obj.pos_structure = pos_structure_json
+            template_obj.frequency = 1
+            template_obj.mode = mode
+            template_obj.example = doc.text
             self.db.session.add(template_obj)
     
     def _learn_vocabulary_with_pos(self, doc, conversation_id: str, mode: str) -> None:
@@ -224,13 +224,13 @@ class SpeechPatternLearner:
                 if not existing.pos_tag:
                     existing.pos_tag = token.pos_
             else:
-                vocab = self.BotVocabulary(
-                    conversation_id=conversation_id,
-                    word=word,
-                    frequency=1,
-                    mode=mode,
-                    pos_tag=token.pos_
-                )
+                # Create new vocabulary object
+                vocab = self.BotVocabulary()
+                vocab.conversation_id = conversation_id
+                vocab.word = word
+                vocab.frequency = 1
+                vocab.mode = mode
+                vocab.pos_tag = token.pos_
                 self.db.session.add(vocab)
 
 
