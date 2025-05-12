@@ -259,9 +259,18 @@ function createVoiceSelector() {
     testButton.title = 'Test selected voice';
     testButton.addEventListener('click', function() {
         if (selectedVoice) {
-            // Speak a test phrase
-            const testUtterance = new SpeechSynthesisUtterance('Hello, I am Mirror Bot');
+            // Cancel any ongoing speech
+            synth.cancel();
+            
+            // Create a test phrase that shows voice quality better
+            const testUtterance = new SpeechSynthesisUtterance('Hello, I am Mirror Bot. I can speak in different voices.');
             testUtterance.voice = selectedVoice;
+            
+            // Use optimal settings for quality
+            testUtterance.rate = 0.9;  // Slightly slower for better articulation
+            testUtterance.pitch = 1.0; // Default pitch
+            testUtterance.volume = 1.0; // Full volume
+            
             synth.speak(testUtterance);
         }
     });
@@ -404,36 +413,36 @@ function speak(text) {
     // Adjust properties based on bot personality mode
     const currentMode = document.getElementById('mode-select').value;
     
-    // Default properties
+    // Default properties - with better defaults for quality
     let pitch = 1.0;
-    let rate = 1.0;
+    let rate = 0.95; // Slightly slower for better quality
     
-    // Adjust based on bot personality
+    // Adjust based on bot personality - more subtle adjustments for better quality
     switch (currentMode) {
         case 'imitation':
             // Normal human-like speech
             pitch = 1.0;
-            rate = 1.0;
+            rate = 0.95;
             break;
         case 'literal':
             // Slightly mechanical, precise
-            pitch = 0.9;
-            rate = 0.9;
+            pitch = 0.95;
+            rate = 0.85;
             break;
         case 'echo':
             // Slightly higher pitch for echo effect
-            pitch = 1.1;
-            rate = 0.95;
+            pitch = 1.05;
+            rate = 0.9;
             break;
         case 'overunderstanding':
             // Enthusiastic, slightly faster
-            pitch = 1.15;
-            rate = 1.1;
+            pitch = 1.1;
+            rate = 1.0;
             break;
         case 'nonsense':
-            // Varied, unpredictable
-            pitch = 0.9 + Math.random() * 0.4; // 0.9 to 1.3
-            rate = 0.8 + Math.random() * 0.4;  // 0.8 to 1.2
+            // Varied, but more constrained for better quality
+            pitch = 0.95 + Math.random() * 0.2; // 0.95 to 1.15
+            rate = 0.85 + Math.random() * 0.2;  // 0.85 to 1.05
             break;
     }
     
@@ -442,7 +451,34 @@ function speak(text) {
     utterance.rate = rate;
     utterance.volume = 1;
     
-    // Speak
+    // Improve audio quality with chunking for longer texts
+    if (text.length > 100) {
+        // For longer text, break it into sentences for better quality
+        const sentences = text.split(/[.!?]+/).filter(sentence => sentence.trim().length > 0);
+        
+        if (sentences.length > 1) {
+            // Cancel any ongoing speech
+            synth.cancel();
+            
+            // Speak each sentence with a slight pause between
+            sentences.forEach((sentence, index) => {
+                const sentenceUtterance = new SpeechSynthesisUtterance(sentence.trim() + '.');
+                sentenceUtterance.voice = utterance.voice;
+                sentenceUtterance.pitch = utterance.pitch;
+                sentenceUtterance.rate = utterance.rate;
+                sentenceUtterance.volume = utterance.volume;
+                
+                // Add a slight delay between sentences for more natural speech
+                setTimeout(() => {
+                    synth.speak(sentenceUtterance);
+                }, index * 50);
+            });
+            
+            return; // Exit early since we've handled it with the chunking approach
+        }
+    }
+    
+    // For shorter text, speak as-is
     synth.speak(utterance);
 }
 
