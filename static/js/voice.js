@@ -325,27 +325,31 @@ function updateVoiceSelector() {
             const langCode = voice.lang.split('-')[0];
             let langName = langCode;
             
-            // Try to get human-readable language name if Intl.DisplayNames is supported
-            try {
-                if (typeof Intl !== 'undefined' && typeof Intl.DisplayNames === 'function') {
-                    langName = new Intl.DisplayNames(['en'], { type: 'language' }).of(langCode) || langCode;
-                }
-            } catch (e) {
-                console.warn('Intl.DisplayNames not supported in this browser');
-                // Fallback to using basic language mapping
-                const langMap = {
-                    'en': 'English',
-                    'fr': 'French',
-                    'es': 'Spanish',
-                    'de': 'German',
-                    'it': 'Italian',
-                    'pt': 'Portuguese',
-                    'ru': 'Russian',
-                    'ja': 'Japanese',
-                    'zh': 'Chinese'
-                };
-                langName = langMap[langCode] || langCode;
-            }
+            // Use basic language mapping instead of Intl.DisplayNames
+            // This is more compatible with all environments
+            const langMap = {
+                'en': 'English',
+                'fr': 'French',
+                'es': 'Spanish',
+                'de': 'German',
+                'it': 'Italian',
+                'pt': 'Portuguese',
+                'ru': 'Russian',
+                'ja': 'Japanese',
+                'zh': 'Chinese',
+                'nl': 'Dutch',
+                'sv': 'Swedish',
+                'no': 'Norwegian',
+                'da': 'Danish',
+                'fi': 'Finnish',
+                'el': 'Greek',
+                'hi': 'Hindi',
+                'ar': 'Arabic',
+                'ko': 'Korean',
+                'vi': 'Vietnamese',
+                'th': 'Thai'
+            };
+            langName = langMap[langCode] || langCode.toUpperCase();
             
             if (!voicesByLang[langName]) {
                 voicesByLang[langName] = [];
