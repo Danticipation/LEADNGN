@@ -13,6 +13,7 @@ from .logic_adapters import (
     OverUnderstandingLogicAdapter,
     NonsenseLogicAdapter
 )
+from .advanced_logic_adapters import AdvancedImitationLogicAdapter
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -24,13 +25,14 @@ data_dir.mkdir(exist_ok=True)
 # Define available bot modes and their friendly names
 BOT_MODES = {
     'imitation': 'Imitation Mode',
+    'advanced_imitation': 'Advanced Imitation Mode',
     'literal': 'Literal Mode',
     'echo': 'Echo Mode',
     'overunderstanding': 'Over-Understanding Mode',
     'nonsense': 'Nonsense Mode'
 }
 
-def create_bot(mode='imitation'):
+def create_bot(mode='advanced_imitation'):
     """
     Factory function to create a chatbot with the specified mode
     
@@ -43,6 +45,7 @@ def create_bot(mode='imitation'):
     # Map modes to logic adapters
     logic_adapter_map = {
         'imitation': 'bot.logic_adapters.ImitationLogicAdapter',
+        'advanced_imitation': 'bot.advanced_logic_adapters.AdvancedImitationLogicAdapter',
         'literal': 'bot.logic_adapters.LiteralLogicAdapter',
         'echo': 'bot.logic_adapters.EchoLogicAdapter',
         'overunderstanding': 'bot.logic_adapters.OverUnderstandingLogicAdapter',
@@ -51,12 +54,12 @@ def create_bot(mode='imitation'):
     
     # Use default if an invalid mode is provided
     if mode not in logic_adapter_map:
-        mode = 'imitation'
-        logger.warning(f"Invalid mode '{mode}' specified, using 'imitation' instead")
+        mode = 'advanced_imitation'
+        logger.warning(f"Invalid mode '{mode}' specified, using 'advanced_imitation' instead")
     
     # Create a new CustomChatBot instance
     bot = CustomChatBot(
-        name=f"MirrorBot-{mode}",
+        name=f"MirrorBot-{mode.replace('advanced_', '')}",  # Keep original name but use advanced adapter
         storage_adapter="bot.storage_adapters.SQLStorageAdapter",
         logic_adapters=[
             logic_adapter_map[mode]
