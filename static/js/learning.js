@@ -173,4 +173,210 @@ function updateLearningStage(data) {
     if (modeStatsElem) {
         modeStatsElem.textContent = `Words in current mode: ${modeCount}`;
     }
+    
+    // Display advanced learning patterns if available
+    displayAdvancedPatterns(data);
+}
+
+/**
+ * Display advanced learning patterns
+ * @param {Object} data - Learning statistics data
+ */
+function displayAdvancedPatterns(data) {
+    // Check if advanced patterns exist in the data
+    if (!data.advanced_patterns) {
+        return;
+    }
+    
+    // Get or create container for advanced patterns
+    let advancedContainer = document.getElementById('advanced-patterns-container');
+    if (!advancedContainer) {
+        // Check if parent container exists
+        const learningContainer = document.querySelector('.learning-container');
+        if (!learningContainer) return;
+        
+        // Create heading
+        const heading = document.createElement('h6');
+        heading.className = 'text-light mt-4';
+        heading.textContent = 'Advanced Learning Patterns';
+        learningContainer.appendChild(heading);
+        
+        // Create container
+        advancedContainer = document.createElement('div');
+        advancedContainer.id = 'advanced-patterns-container';
+        advancedContainer.className = 'advanced-patterns-container mt-2';
+        learningContainer.appendChild(advancedContainer);
+    }
+    
+    // Clear existing content
+    advancedContainer.innerHTML = '';
+    
+    const { counts, examples, template_count } = data.advanced_patterns;
+    
+    // If no patterns learned yet
+    if (Object.keys(counts).length === 0 && template_count === 0) {
+        const emptyState = document.createElement('p');
+        emptyState.className = 'text-muted small';
+        emptyState.textContent = 'No advanced patterns learned yet. Continue chatting to teach the bot more patterns!';
+        advancedContainer.appendChild(emptyState);
+        return;
+    }
+    
+    // Create pattern counts display
+    const statsDiv = document.createElement('div');
+    statsDiv.className = 'pattern-stats small';
+    
+    // Add pattern type counts
+    for (const [type, count] of Object.entries(counts)) {
+        const patternType = document.createElement('div');
+        patternType.className = 'pattern-type-stat';
+        
+        // Format the pattern type name
+        let typeName = type.replace('_', ' ');
+        if (typeName.endsWith('-gram')) {
+            typeName = typeName.replace('-gram', '-word phrases'); 
+        }
+        
+        patternType.innerHTML = `<span class="pattern-type">${typeName}:</span> <span class="pattern-count">${count}</span>`;
+        statsDiv.appendChild(patternType);
+    }
+    
+    // Add template count
+    if (template_count > 0) {
+        const templatesType = document.createElement('div');
+        templatesType.className = 'pattern-type-stat';
+        templatesType.innerHTML = `<span class="pattern-type">sentence templates:</span> <span class="pattern-count">${template_count}</span>`;
+        statsDiv.appendChild(templatesType);
+    }
+    
+    advancedContainer.appendChild(statsDiv);
+    
+    // Show examples of patterns (if any)
+    if (Object.keys(examples).length > 0) {
+        const examplesContainer = document.createElement('div');
+        examplesContainer.className = 'pattern-examples mt-2';
+        
+        // Get current mode
+        const currentMode = document.getElementById('mode-select').value;
+        
+        // Add collapsible section for examples
+        if (currentMode === 'advanced_imitation') {
+            const examplesToggle = document.createElement('a');
+            examplesToggle.href = '#';
+            examplesToggle.className = 'examples-toggle small text-info';
+            examplesToggle.textContent = 'Show pattern examples';
+            examplesToggle.onclick = function(e) {
+                e.preventDefault();
+                const examplesList = document.getElementById('pattern-examples-list');
+                if (examplesList.style.display === 'none') {
+                    examplesList.style.display = 'block';
+                    examplesToggle.textContent = 'Hide pattern examples';
+                } else {
+                    examplesList.style.display = 'none';
+                    examplesToggle.textContent = 'Show pattern examples';
+                }
+            };
+            examplesContainer.appendChild(examplesToggle);
+            
+            // Create examples list (hidden by default)
+            const examplesList = document.createElement('div');
+            examplesList.id = 'pattern-examples-list';
+            examplesList.className = 'pattern-examples-list small mt-2';
+            examplesList.style.display = 'none';
+            
+            // Add examples for each pattern type
+            for (const [type, patternList] of Object.entries(examples)) {
+                if (patternList.length === 0) continue;
+                
+                // Format pattern type name
+                let typeName = type.replace('_', ' ');
+                if (typeName.endsWith('-gram')) {
+                    typeName = typeName.replace('-gram', '-word phrases'); 
+                }
+                
+                const typeHeading = document.createElement('div');
+                typeHeading.className = 'pattern-examples-heading text-info mt-1';
+                typeHeading.textContent = typeName + ':';
+                examplesList.appendChild(typeHeading);
+                
+                // Add pattern examples
+                patternList.forEach(pattern => {
+                    const patternItem = document.createElement('div');
+                    patternItem.className = 'pattern-example-item';
+                    patternItem.textContent = `"${pattern.pattern}" (used ${pattern.frequency} times)`;
+                    examplesList.appendChild(patternItem);
+                });
+            }
+            
+            examplesContainer.appendChild(examplesList);
+        } else {
+            // For other modes, just show a note
+            const noteElem = document.createElement('div');
+            noteElem.className = 'text-muted small';
+            noteElem.textContent = 'Switch to Advanced Imitation Mode to see learned patterns.';
+            examplesContainer.appendChild(noteElem);
+        }
+        
+        advancedContainer.appendChild(examplesContainer);
+    }
+    
+    // Add some CSS for the new elements
+    addAdvancedPatternsCSS();
+}
+
+/**
+ * Add CSS for advanced patterns display
+ */
+function addAdvancedPatternsCSS() {
+    // Check if styles are already added
+    if (document.getElementById('advanced-patterns-styles')) {
+        return;
+    }
+    
+    // Create style element
+    const styleElem = document.createElement('style');
+    styleElem.id = 'advanced-patterns-styles';
+    
+    // Add CSS rules
+    styleElem.textContent = `
+        .advanced-patterns-container {
+            background-color: rgba(30, 30, 30, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .pattern-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .pattern-type-stat {
+            background-color: rgba(40, 40, 40, 0.5);
+            border-radius: 4px;
+            padding: 4px 8px;
+        }
+        
+        .pattern-type {
+            color: var(--bs-info);
+            font-weight: 500;
+        }
+        
+        .pattern-examples-list {
+            background-color: rgba(20, 20, 20, 0.5);
+            border-radius: 6px;
+            padding: 8px 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .pattern-example-item {
+            padding: 3px 0;
+            color: #ccc;
+        }
+    `;
+    
+    // Add to document
+    document.head.appendChild(styleElem);
 }

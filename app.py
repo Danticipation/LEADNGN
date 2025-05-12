@@ -76,18 +76,18 @@ def message():
         
         # Save message to database
         with app.app_context():
-            user_msg = Message(
-                conversation_id=conversation_id,
-                sender='user',
-                content=user_message,
-                mode=bot_mode
-            )
-            bot_msg = Message(
-                conversation_id=conversation_id,
-                sender='bot',
-                content=str(bot_response),
-                mode=bot_mode
-            )
+            user_msg = Message()
+            user_msg.conversation_id = conversation_id
+            user_msg.sender = 'user'
+            user_msg.content = user_message
+            user_msg.mode = bot_mode
+            
+            bot_msg = Message()
+            bot_msg.conversation_id = conversation_id
+            bot_msg.sender = 'bot'
+            bot_msg.content = str(bot_response)
+            bot_msg.mode = bot_mode
+            
             db.session.add(user_msg)
             db.session.add(bot_msg)
             db.session.commit()
@@ -148,7 +148,52 @@ def learning_stats():
         return jsonify({'vocabulary': [], 'total': 0})
     
     try:
+        # Get basic stats from bot
         stats = get_bot_stats(conversation_id)
+        
+        # Add advanced learning pattern stats
+        from models import SpeechPattern, PhraseTemplate
+        
+        # Count patterns by type
+        pattern_counts = {}
+        patterns = db.session.query(
+            SpeechPattern.pattern_type, 
+            db.func.count(SpeechPattern.id)
+        ).filter_by(
+            conversation_id=conversation_id
+        ).group_by(SpeechPattern.pattern_type).all()
+        
+        for pattern_type, count in patterns:
+            pattern_counts[pattern_type] = count
+            
+        # Count phrase templates
+        template_count = PhraseTemplate.query.filter_by(
+            conversation_id=conversation_id
+        ).count()
+        
+        # Get a few examples of each pattern type
+        pattern_examples = {}
+        for pattern_type in pattern_counts.keys():
+            examples = SpeechPattern.query.filter_by(
+                conversation_id=conversation_id,
+                pattern_type=pattern_type
+            ).order_by(SpeechPattern.frequency.desc()).limit(3).all()
+            
+            pattern_examples[pattern_type] = [
+                {
+                    "pattern": example.pattern,
+                    "frequency": example.frequency
+                }
+                for example in examples
+            ]
+            
+        # Add to stats
+        stats['advanced_patterns'] = {
+            'counts': pattern_counts,
+            'examples': pattern_examples,
+            'template_count': template_count
+        }
+        
         return jsonify(stats)
     
     except Exception as e:
