@@ -152,7 +152,7 @@ def learning_stats():
         stats = get_bot_stats(conversation_id)
         
         # Add advanced learning pattern stats
-        from models import SpeechPattern, PhraseTemplate
+        from models import SpeechPattern, PhraseTemplate, MemoryFact
         
         # Count patterns by type
         pattern_counts = {}
@@ -193,6 +193,23 @@ def learning_stats():
             'examples': pattern_examples,
             'template_count': template_count
         }
+        
+        # Add memory facts
+        facts = MemoryFact.query.filter_by(
+            conversation_id=conversation_id
+        ).order_by(MemoryFact.priority.desc(), MemoryFact.mentioned_count.desc()).limit(10).all()
+        
+        memory_facts = []
+        for fact in facts:
+            memory_facts.append({
+                'subject': fact.subject,
+                'fact': fact.fact,
+                'confidence': fact.confidence,
+                'mentioned_count': fact.mentioned_count,
+                'updated_at': fact.updated_at.isoformat() if fact.updated_at else None
+            })
+        
+        stats['memory_facts'] = memory_facts
         
         return jsonify(stats)
     

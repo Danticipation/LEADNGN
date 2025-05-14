@@ -365,10 +365,16 @@ class MemoryManager:
             score += fact['priority'] * 0.5
             score += fact['mentioned_count'] * 0.2
             
+            # Always assign at least a small score to ensure facts can be used
+            if score == 0:
+                score = 0.1 + (fact['priority'] / 10)
+                
             scored_facts.append((score, fact))
         
-        # Sort by score and return top facts
-        scored_facts.sort(reverse=True)
+        # Sort by score in descending order (highest scores first)
+        scored_facts.sort(key=lambda x: x[0], reverse=True)
+        
+        # Return the facts (without scores)
         return [fact for score, fact in scored_facts[:limit]]
     
     def incorporate_facts_into_response(self, response_text: str, conversation_id: str) -> str:
@@ -382,33 +388,47 @@ class MemoryManager:
         Returns:
             Modified response with incorporated facts
         """
-        # Get relevant facts
-        relevant_facts = self.get_relevant_facts(response_text, conversation_id, limit=2)
-        
-        if not relevant_facts:
+        try:
+            # Get relevant facts
+            relevant_facts = self.get_relevant_facts(response_text, conversation_id, limit=2)
+            
+            if not relevant_facts:
+                return response_text
+                
+            # Simple fact incorporation - just append a sentence
+            # In a more sophisticated system, this would use more natural incorporation
+            fact = relevant_facts[0]
+            
+            # Skip fact incorporation if confidence is missing or too low
+            if 'confidence' not in fact or fact['confidence'] < 0.7:
+                return response_text
+                
+            # Don't add facts if response is already long
+            if len(response_text) > 100:
+                return response_text
+                
+            # Don't repeat facts that are already in the response
+            if fact['fact'].lower() in response_text.lower():
+                return response_text
+                
+            if fact['subject'] == 'name':
+                modified = f"{response_text} I remember your name is {fact['fact']}."
+            elif fact['subject'] == 'location':
+                modified = f"{response_text} You mentioned you're from {fact['fact']}."
+            elif fact['subject'] == 'hobby':
+                modified = f"{response_text} I recall you enjoy {fact['fact']}."
+            elif fact['subject'] == 'occupation':
+                modified = f"{response_text} You work as {fact['fact']}, right?"
+            elif fact['subject'].startswith('preference_'):
+                category = fact['subject'].replace('preference_', '')
+                modified = f"{response_text} I remember your favorite {category} is {fact['fact']}."
+            else:
+                # Default case - generic incorporation
+                modified = f"{response_text} I remember that {fact['fact']}."
+                
+            return modified
+                
+        except Exception as e:
+            logger.error(f"Error in incorporate_facts_into_response: {str(e)}")
+            # If anything goes wrong, just return the original response
             return response_text
-            
-        # Simple fact incorporation - just append a sentence
-        # In a more sophisticated system, this would use more natural incorporation
-        fact = relevant_facts[0]
-        
-        # Only incorporate if the fact is high confidence
-        if fact['confidence'] < 0.7:
-            return response_text
-            
-        if fact['subject'] == 'name':
-            modified = f"{response_text} I remember your name is {fact['fact']}."
-        elif fact['subject'] == 'location':
-            modified = f"{response_text} You mentioned you're from {fact['fact']}."
-        elif fact['subject'] == 'hobby':
-            modified = f"{response_text} I recall you enjoy {fact['fact']}."
-        elif fact['subject'] == 'occupation':
-            modified = f"{response_text} You work as {fact['fact']}, right?"
-        elif fact['subject'].startswith('preference_'):
-            category = fact['subject'].replace('preference_', '')
-            modified = f"{response_text} I remember your favorite {category} is {fact['fact']}."
-        else:
-            # Default case - generic incorporation
-            modified = f"{response_text} I remember that {fact['fact']}."
-            
-        return modified

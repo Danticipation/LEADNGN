@@ -62,6 +62,17 @@ class AdvancedImitationLogicAdapter(LogicAdapter):
         except Exception as e:
             logger.error(f"Error learning from text: {str(e)}")
         
+        # Check if this is a question and handle it accordingly
+        if self._is_question(statement.text):
+            response_text, confidence = self._answer_question(statement.text, conversation_id)
+            
+            if response_text and confidence > 0.5:
+                return Statement(
+                    text=response_text,
+                    in_response_to=statement.text,
+                    confidence=confidence
+                )
+        
         # Get all statements that share significant words
         input_words = set(self._get_significant_words(statement.text))
         if not input_words:
@@ -155,6 +166,115 @@ class AdvancedImitationLogicAdapter(LogicAdapter):
         
         # Fallback to learning-stage appropriate response
         return self._generate_learning_response(statement, conversation_id)
+        
+    def _is_question(self, text):
+        """
+        Determine if text is a question.
+        """
+        # Simple regex for question detection
+        import re
+        
+        # Check if text ends with question mark
+        if text.strip().endswith("?"):
+            return True
+            
+        # Check for common question words/phrases
+        question_starters = [
+            r"^(what|who|where|when|why|how|is|are|can|could|would|will|do|does|did)",
+            r"^(tell me|can you tell me|do you know)",
+            r"^(i want to know|please tell)"
+        ]
+        
+        for pattern in question_starters:
+            if re.search(pattern, text.strip().lower()):
+                return True
+                
+        return False
+        
+    def _answer_question(self, question, conversation_id):
+        """
+        Answer a question using the memory system.
+        
+        Returns:
+            Tuple of (answer_text, confidence)
+        """
+        # Normalize question
+        question = question.strip().lower()
+        
+        # Check for questions about stored facts
+        if any(word in question for word in ["name", "who am i", "call me"]):
+            fact = self.memory_manager.get_fact(conversation_id, "name")
+            if fact:
+                return f"Your name is {fact['fact']}.", 0.9
+                
+        elif any(word in question for word in ["age", "how old", "years old"]):
+            fact = self.memory_manager.get_fact(conversation_id, "age")
+            if fact:
+                return f"You are {fact['fact']} years old.", 0.9
+                
+        elif any(word in question for word in ["live", "location", "city", "country", "where"]):
+            fact = self.memory_manager.get_fact(conversation_id, "location")
+            if fact:
+                return f"You live in {fact['fact']}.", 0.9
+                
+        elif any(word in question for word in ["job", "work", "profession", "occupation"]):
+            fact = self.memory_manager.get_fact(conversation_id, "occupation")
+            if fact:
+                return f"You work as {fact['fact']}.", 0.9
+                
+        elif any(word in question for word in ["hobby", "like to", "enjoy"]):
+            fact = self.memory_manager.get_fact(conversation_id, "hobby")
+            if fact:
+                return f"You enjoy {fact['fact']}.", 0.9
+                
+        elif "favorite" in question:
+            # Check for specific category of favorite
+            for category in ["color", "food", "movie", "book", "music", "song", "place"]:
+                if category in question:
+                    fact = self.memory_manager.get_fact(conversation_id, f"preference_{category}")
+                    if fact:
+                        return f"Your favorite {category} is {fact['fact']}.", 0.9
+            
+            # Generic favorites query
+            preferences = self.memory_manager.get_facts(conversation_id, context_tag="preference")
+            if preferences:
+                pref = preferences[0]
+                category = pref['subject'].replace('preference_', '')
+                return f"I remember your favorite {category} is {pref['fact']}.", 0.9
+        
+        # What do you know about me / what do you remember
+        elif any(phrase in question for phrase in ["what do you know", "what do you remember", "what have i told you"]):
+            facts = self.memory_manager.get_facts(conversation_id, limit=5)
+            if facts:
+                fact_strings = []
+                for fact in facts:
+                    subject = fact['subject']
+                    # Format based on subject type
+                    if subject == "name":
+                        fact_strings.append(f"your name is {fact['fact']}")
+                    elif subject == "age":
+                        fact_strings.append(f"you are {fact['fact']} years old")
+                    elif subject == "location":
+                        fact_strings.append(f"you live in {fact['fact']}")
+                    elif subject == "occupation":
+                        fact_strings.append(f"you work as {fact['fact']}")
+                    elif subject == "hobby":
+                        fact_strings.append(f"you enjoy {fact['fact']}")
+                    elif subject.startswith("preference_"):
+                        category = subject.replace("preference_", "")
+                        fact_strings.append(f"your favorite {category} is {fact['fact']}")
+                    else:
+                        fact_strings.append(f"{fact['fact']}")
+                
+                if len(fact_strings) == 1:
+                    return f"I remember that {fact_strings[0]}.", 0.9
+                else:
+                    facts_text = ", ".join(fact_strings[:-1]) + f", and {fact_strings[-1]}"
+                    return f"I remember that {facts_text}.", 0.9
+            else:
+                return "I don't have any specific facts about you yet. Feel free to tell me more about yourself.", 0.7
+                
+        return None, 0.0
     
     def _select_response(self, responses):
         """Select a response based on how frequently it appears"""
