@@ -266,6 +266,20 @@
     color: var(--bs-light);
 }
 
+/* Memory page styling */
+.memory-cards .card {
+    transition: transform 0.2s ease;
+}
+
+.memory-cards .card:hover {
+    transform: translateY(-3px);
+}
+
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .message {
@@ -274,5 +288,18 @@
     
     .chat-container {
         height: 50vh;
+    }
+    
+    /* Memory page mobile adjustments */
+    .memory-cards .card {
+        margin-bottom: 1rem;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    .table {
+        font-size: 0.9rem;
     }
 }
