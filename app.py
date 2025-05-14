@@ -139,6 +139,18 @@ def chat_history():
         logger.error(f"Error retrieving chat history: {str(e)}")
         return jsonify({'error': 'An error occurred retrieving chat history'}), 500
 
+@app.route('/memory')
+def memory_page():
+    """Render the memory view page"""
+    # Initialize session if not already done
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+        session['bot_mode'] = 'imitation'
+    
+    return render_template('memory.html', 
+                           bot_modes=get_bot_modes(),
+                           current_mode=session.get('bot_mode', 'imitation'))
+
 @app.route('/api/learning-stats', methods=['GET'])
 def learning_stats():
     """Get learning statistics for the bot"""
