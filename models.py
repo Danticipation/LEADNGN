@@ -39,7 +39,7 @@ class SpeechPattern(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     conversation_id = db.Column(db.String(36), nullable=False, index=True)
     pattern_type = db.Column(db.String(20), nullable=False)  # 'ngram', 'pos_sequence', 'phrase'
-    pattern = db.Column(db.String(255), nullable=False)
+    pattern = db.Column(db.Text, nullable=False)  # Changed from String(255) to Text for long patterns
     frequency = db.Column(db.Integer, default=1)
     mode = db.Column(db.String(20), nullable=False)  # Bot mode used
     example = db.Column(db.Text, nullable=True)  # Example text containing this pattern
