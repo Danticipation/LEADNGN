@@ -9,6 +9,7 @@ from .logic_adapter_base import LogicAdapter
 from .conversation import Statement
 from .advanced_learning import SpeechPatternLearner, AdvancedResponseGenerator
 from .comparisons import LevenshteinDistance
+from .memory_manager import MemoryManager
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -35,6 +36,9 @@ class AdvancedImitationLogicAdapter(LogicAdapter):
         self.learner = SpeechPatternLearner(nlp, db)
         self.generator = AdvancedResponseGenerator(nlp, db)
         
+        # Initialize memory manager for facts
+        self.memory_manager = MemoryManager(db)
+        
         # Track learning progress
         self._init_learning_stage()
     
@@ -47,10 +51,14 @@ class AdvancedImitationLogicAdapter(LogicAdapter):
         """
         additional_response_selection_parameters = additional_response_selection_parameters or {}
         conversation_id = additional_response_selection_parameters.get('conversation_id', 'default')
+        message_id = additional_response_selection_parameters.get('message_id')
         
         # Learn from this statement
         try:
             self.learner.learn_from_text(statement.text, conversation_id, 'imitation')
+            
+            # Extract and store facts from the statement
+            self.memory_manager.extract_facts(statement.text, conversation_id, message_id)
         except Exception as e:
             logger.error(f"Error learning from text: {str(e)}")
         
@@ -70,6 +78,21 @@ class AdvancedImitationLogicAdapter(LogicAdapter):
             
             # If we have a good response, use it
             if response_text and confidence > self.confidence_threshold:
+                # Try to incorporate relevant facts into the response
+                try:
+                    enhanced_response = self.memory_manager.incorporate_facts_into_response(
+                        response_text, conversation_id
+                    )
+                    response = Statement(
+                        text=enhanced_response,
+                        in_response_to=statement.text
+                    )
+                    response.confidence = confidence
+                    return response
+                except Exception as e:
+                    logger.error(f"Error incorporating facts: {str(e)}")
+                    
+                # Fallback to original response if fact incorporation fails
                 response = Statement(
                     text=response_text,
                     in_response_to=statement.text
@@ -108,8 +131,24 @@ class AdvancedImitationLogicAdapter(LogicAdapter):
         # If we found a good match
         if best_match and best_similarity > self.confidence_threshold:
             confidence = best_similarity
+            response_text = best_match.text
+            
+            # Try to incorporate facts
+            try:
+                enhanced_response = self.memory_manager.incorporate_facts_into_response(
+                    response_text, conversation_id
+                )
+                return Statement(
+                    text=enhanced_response,
+                    in_response_to=statement.text,
+                    confidence=confidence
+                )
+            except Exception as e:
+                logger.error(f"Error incorporating facts: {str(e)}")
+                
+            # Fallback to original response
             return Statement(
-                text=best_match.text,
+                text=response_text,
                 in_response_to=statement.text,
                 confidence=confidence
             )
