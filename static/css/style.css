@@ -280,6 +280,32 @@
     -webkit-overflow-scrolling: touch;
 }
 
+/* Emotion styling */
+.emotion-indicator {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.emotion-indicator .badge {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.emotion-indicator .badge:hover {
+    transform: scale(1.05);
+}
+
+.emotion-count-container {
+    gap: 8px;
+}
+
+.emotion-count-item {
+    transition: transform 0.2s ease;
+}
+
+.emotion-count-item:hover {
+    transform: scale(1.1);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .message {

@@ -105,6 +105,15 @@ function sendMessage() {
         if (data.error) {
             addMessageToChat('bot', 'Sorry, I encountered an error processing your message.');
         } else {
+            // Check if there's emotion data
+            const emotionData = data.emotion || { detected: 'neutral', confidence: 0.5, intensity: 0.5 };
+            
+            // Add user's detected emotion above their message
+            if (emotionData.detected !== 'neutral' && emotionData.confidence > 0.5) {
+                addEmotionIndicator(emotionData.detected, emotionData.confidence, emotionData.intensity);
+            }
+            
+            // Add bot response
             addMessageToChat('bot', data.response);
             
             // Update learning stats
@@ -225,6 +234,7 @@ function updateModeIndicator(mode) {
  */
 function getModeDisplayName(mode) {
     const modeNames = {
+        'advanced_imitation': 'Advanced Imitation Mode',
         'imitation': 'Imitation Mode',
         'literal': 'Literal Mode',
         'echo': 'Echo Mode',
@@ -233,6 +243,65 @@ function getModeDisplayName(mode) {
     };
     
     return modeNames[mode] || mode;
+}
+
+/**
+ * Add an emotion indicator to the chat
+ * @param {string} emotion - The detected emotion
+ * @param {number} confidence - Confidence score of the emotion detection
+ * @param {number} intensity - Intensity of the emotion
+ */
+function addEmotionIndicator(emotion, confidence, intensity) {
+    // Create indicator element
+    const indicator = document.createElement('div');
+    indicator.className = 'emotion-indicator text-center my-2 fade-in';
+    
+    // Get the icon for this emotion
+    const icon = emotionIcons[emotion] || emotionIcons.neutral;
+    const color = emotionColors[emotion] || emotionColors.neutral;
+    
+    // Calculate opacity based on confidence and intensity
+    const opacity = Math.max(0.3, Math.min(0.9, confidence * intensity));
+    
+    // Create the indicator HTML
+    indicator.innerHTML = `
+        <span class="badge rounded-pill px-3 py-2" 
+              style="background-color: rgba(${hexToRgb(color)}, ${opacity});">
+            <i class="fas ${icon} me-1"></i>
+            Detected emotion: ${capitalizeFirst(emotion)}
+            <small>(${Math.round(confidence * 100)}% confidence)</small>
+        </span>
+    `;
+    
+    // Add to chat
+    chatContainer.appendChild(indicator);
+    scrollToBottom();
+}
+
+/**
+ * Convert hex color to RGB
+ * @param {string} hex - Hex color code
+ * @returns {string} RGB values as "r, g, b"
+ */
+function hexToRgb(hex) {
+    // Remove # if present
+    hex = hex.replace('#', '');
+    
+    // Parse the hex values
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    return `${r}, ${g}, ${b}`;
+}
+
+/**
+ * Capitalize first letter of a string
+ * @param {string} string - Input string
+ * @returns {string} String with first letter capitalized
+ */
+function capitalizeFirst(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 /**
