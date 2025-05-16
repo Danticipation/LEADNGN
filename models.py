@@ -124,3 +124,35 @@ class MemoryFact(db.Model):
             self.fact_metadata = None
         else:
             self.fact_metadata = json.dumps(metadata_dict)
+
+class EmotionTracker(db.Model):
+    """Model to track user emotions over time"""
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.String(36), nullable=False, index=True)
+    message_id = db.Column(db.Integer, db.ForeignKey('message.id'), nullable=True)
+    primary_emotion = db.Column(db.String(20), nullable=False)  # happy, sad, angry, afraid, surprised, neutral
+    confidence = db.Column(db.Float, default=0.5)  # Confidence in the emotion detection (0-1)
+    intensity = db.Column(db.Float, default=0.5)  # Intensity of the emotion (0-1)
+    emotion_data = db.Column(db.Text, nullable=True)  # JSON string with detailed emotion scores
+    text_sample = db.Column(db.Text, nullable=True)  # Sample of the text that triggered this emotion
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    mode = db.Column(db.String(20), nullable=False)  # Bot mode used when this emotion was detected
+    
+    def __repr__(self):
+        return f'<EmotionTracker {self.primary_emotion}: {self.confidence:.2f}>'
+    
+    def get_emotion_data(self):
+        """Return emotion data as a dictionary"""
+        if not self.emotion_data:
+            return {}
+        try:
+            return json.loads(self.emotion_data)
+        except:
+            return {}
+    
+    def set_emotion_data(self, emotion_dict):
+        """Set emotion data from a dictionary"""
+        if not emotion_dict:
+            self.emotion_data = None
+        else:
+            self.emotion_data = json.dumps(emotion_dict)
