@@ -7,8 +7,34 @@
     <h1 class="mb-4">MirrorBot Memory</h1>
     <p class="lead">View what your MirrorBot has learned about you.</p>
     
-    <div class="row mb-4">
-        <div class="col-12">
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" id="memory-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="facts-tab" data-bs-toggle="tab" data-bs-target="#facts" type="button" role="tab" aria-controls="facts" aria-selected="true">
+                <i class="fas fa-lightbulb"></i> Facts
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="vocabulary-tab" data-bs-toggle="tab" data-bs-target="#vocabulary" type="button" role="tab" aria-controls="vocabulary" aria-selected="false">
+                <i class="fas fa-book"></i> Vocabulary
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="emotions-tab" data-bs-toggle="tab" data-bs-target="#emotions" type="button" role="tab" aria-controls="emotions" aria-selected="false">
+                <i class="fas fa-smile"></i> Emotions
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="patterns-tab" data-bs-toggle="tab" data-bs-target="#patterns" type="button" role="tab" aria-controls="patterns" aria-selected="false">
+                <i class="fas fa-project-diagram"></i> Patterns
+            </button>
+        </li>
+    </ul>
+    
+    <!-- Tab Content -->
+    <div class="tab-content" id="memory-tab-content">
+        <!-- Facts Tab -->
+        <div class="tab-pane fade show active" id="facts" role="tabpanel" aria-labelledby="facts-tab">
             <div class="card bg-dark text-light">
                 <div class="card-header">
                     <h5>Memory Facts</h5>
@@ -20,27 +46,107 @@
                 </div>
             </div>
         </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card bg-dark text-light h-100">
-                <div class="card-header">
-                    <h5>Vocabulary Statistics</h5>
+        
+        <!-- Vocabulary Tab -->
+        <div class="tab-pane fade" id="vocabulary" role="tabpanel" aria-labelledby="vocabulary-tab">
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card bg-dark text-light h-100">
+                        <div class="card-header">
+                            <h5>Vocabulary Statistics</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="vocabulary-stats"></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div id="vocabulary-stats"></div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card bg-dark text-light h-100">
+                        <div class="card-header">
+                            <h5>Learning Patterns</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="learning-patterns"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-6 mb-4">
-            <div class="card bg-dark text-light h-100">
-                <div class="card-header">
-                    <h5>Learning Patterns</h5>
+        <!-- Emotions Tab -->
+        <div class="tab-pane fade" id="emotions" role="tabpanel" aria-labelledby="emotions-tab">
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card bg-dark text-light">
+                        <div class="card-header">
+                            <h5>Recent Emotions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="recent-emotions">
+                                <p class="text-center">Loading emotion data...</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div id="learning-patterns"></div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card bg-dark text-light">
+                        <div class="card-header">
+                            <h5>Emotion Distribution</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="emotion-distribution">
+                                <p class="text-center">Loading distribution data...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8 mb-4">
+                    <div class="card bg-dark text-light">
+                        <div class="card-header">
+                            <h5>Emotion Timeline</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="emotion-timeline">
+                                <p class="text-center">Loading timeline data...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <div class="card bg-dark text-light">
+                        <div class="card-header">
+                            <h5>Emotional Patterns</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="emotional-patterns">
+                                <p class="text-center">Loading pattern data...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Patterns Tab -->
+        <div class="tab-pane fade" id="patterns" role="tabpanel" aria-labelledby="patterns-tab">
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <div class="card bg-dark text-light">
+                        <div class="card-header">
+                            <h5>Speech Patterns</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="speech-patterns">
+                                <p class="text-center">Loading speech patterns...</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -54,6 +160,13 @@
         </div>
     </div>
 </div>
+
+{% block scripts %}
+<!-- Chart.js for visualizations -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Custom JS files -->
+<script src="{{ url_for('static', filename='js/emotion_display.js') }}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

@@ -65,36 +65,79 @@ def message():
     bot_mode = session.get('bot_mode', 'imitation')
     
     try:
+        # Process emotions in the user message
+        from bot.emotion_manager import EmotionManager
+        from bot.sentiment_analyzer import analyze_sentiment, add_emotional_style
+        
+        # Analyze emotion in the user message
+        emotion_manager = EmotionManager()
+        emotion_data = analyze_sentiment(user_message)
+        
         # Get bot response using the appropriate bot mode
         bot = create_bot(mode=bot_mode)
         bot_response = bot.get_response(
             user_message,
             additional_response_selection_parameters={
-                'conversation_id': conversation_id
+                'conversation_id': conversation_id,
+                'emotion_data': emotion_data  # Pass emotion data to the bot
             }
         )
         
-        # Save message to database
+        # Save messages to database
         with app.app_context():
+            # Save user message
             user_msg = Message()
             user_msg.conversation_id = conversation_id
             user_msg.sender = 'user'
             user_msg.content = user_message
             user_msg.mode = bot_mode
             
+            db.session.add(user_msg)
+            db.session.flush()  # Flush to get the ID without committing
+            
+            # Track emotion for the user message
+            emotion_manager.track_emotion(
+                user_message, 
+                conversation_id, 
+                user_msg.id, 
+                bot_mode
+            )
+            
+            # Save bot response
             bot_msg = Message()
             bot_msg.conversation_id = conversation_id
             bot_msg.sender = 'bot'
             bot_msg.content = str(bot_response)
             bot_msg.mode = bot_mode
             
-            db.session.add(user_msg)
             db.session.add(bot_msg)
             db.session.commit()
         
+        # Add emotion styling to response in certain cases
+        response_text = str(bot_response)
+        
+        # Determine if we should reflect the user's emotion (50% chance)
+        import random
+        if random.random() < 0.5 and emotion_data['primary_emotion'] != 'neutral':
+            # Apply emotional styling to response text
+            styled_response = add_emotional_style(
+                response_text, 
+                emotion_data['primary_emotion'], 
+                emotion_data['intensity']
+            )
+            
+            # Only use the styled response if it's different
+            if styled_response != response_text:
+                response_text = styled_response
+        
         return jsonify({
-            'response': str(bot_response),
-            'confidence': bot_response.confidence if hasattr(bot_response, 'confidence') else 0
+            'response': response_text,
+            'confidence': bot_response.confidence if hasattr(bot_response, 'confidence') else 0,
+            'emotion': {
+                'detected': emotion_data['primary_emotion'],
+                'confidence': emotion_data['confidence'],
+                'intensity': emotion_data['intensity']
+            }
         })
         
     except Exception as e:
@@ -228,6 +271,67 @@ def learning_stats():
     except Exception as e:
         logger.error(f"Error retrieving learning stats: {str(e)}")
         return jsonify({'error': 'An error occurred retrieving learning stats'}), 500
+
+@app.route('/api/emotion-stats', methods=['GET'])
+def emotion_stats():
+    """Get emotion statistics and data for the bot"""
+    conversation_id = session.get('session_id')
+    
+    if not conversation_id:
+        return jsonify({'recent_emotions': [], 'emotion_distribution': {}})
+    
+    try:
+        from models import EmotionTracker
+        from bot.emotion_manager import EmotionManager
+        
+        emotion_manager = EmotionManager()
+        
+        # Get recent emotions
+        recent_emotions = EmotionTracker.query.filter_by(
+            conversation_id=conversation_id
+        ).order_by(EmotionTracker.created_at.desc()).limit(10).all()
+        
+        recent_emotions_data = []
+        for emotion in recent_emotions:
+            recent_emotions_data.append({
+                'primary_emotion': emotion.primary_emotion,
+                'confidence': emotion.confidence,
+                'intensity': emotion.intensity,
+                'text_sample': emotion.text_sample,
+                'created_at': emotion.created_at.isoformat() if emotion.created_at else None
+            })
+        
+        # Count emotions by type for distribution
+        emotion_distribution = {}
+        emotion_counts = db.session.query(
+            EmotionTracker.primary_emotion, 
+            db.func.count(EmotionTracker.id)
+        ).filter_by(
+            conversation_id=conversation_id
+        ).group_by(EmotionTracker.primary_emotion).all()
+        
+        for emotion, count in emotion_counts:
+            emotion_distribution[emotion] = count
+        
+        # Get emotion timeline
+        emotion_timeline = emotion_manager.get_emotion_timeline(conversation_id)
+        
+        # Get emotional patterns
+        emotional_patterns = emotion_manager.analyze_emotional_patterns(conversation_id)
+        
+        # Combine all emotion stats
+        stats = {
+            'recent_emotions': recent_emotions_data,
+            'emotion_distribution': emotion_distribution,
+            'emotion_timeline': emotion_timeline,
+            'emotional_patterns': emotional_patterns
+        }
+        
+        return jsonify(stats)
+    
+    except Exception as e:
+        logger.error(f"Error retrieving emotion stats: {str(e)}")
+        return jsonify({'error': 'An error occurred retrieving emotion stats'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

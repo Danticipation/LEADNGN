@@ -16,11 +16,32 @@ typingIndicator.style.display = 'none';
 
 // Bot mode icons
 const modeIcons = {
+    'advanced_imitation': 'fas fa-graduation-cap',
     'imitation': 'fas fa-clone',
     'literal': 'fas fa-book',
     'echo': 'fas fa-bullhorn',
     'overunderstanding': 'fas fa-brain',
     'nonsense': 'fas fa-random'
+};
+
+// Emotion icons for visualization
+const emotionIcons = {
+    'happy': 'fa-smile',
+    'sad': 'fa-sad-tear',
+    'angry': 'fa-angry',
+    'afraid': 'fa-grimace',
+    'surprised': 'fa-surprise',
+    'neutral': 'fa-meh'
+};
+
+// Emotion colors for styling
+const emotionColors = {
+    'happy': '#4BBF73',     // Green
+    'sad': '#5091CD',       // Blue
+    'angry': '#D9534F',     // Red
+    'afraid': '#EFAD4D',    // Yellow/Gold
+    'surprised': '#9B59B6', // Purple
+    'neutral': '#6C757D'    // Gray
 };
 
 // Initialize chat
