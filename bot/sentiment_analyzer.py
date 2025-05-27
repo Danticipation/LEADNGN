@@ -191,10 +191,15 @@ def analyze_sentiment(text):
     # Check for emojis and give them higher weight
     for emotion, keywords in EMOTION_KEYWORDS.items():
         for keyword in keywords:
-            if len(keyword) == 1 or keyword.startswith((':',)) or '\u' in repr(keyword):
-                # This is likely an emoji
-                if keyword in text:
-                    emotion_scores[emotion] += 0.5  # Emojis have stronger weight
+            try:
+                # Check if this is likely an emoji (Unicode characters)
+                if len(keyword) <= 2 and any(ord(char) > 127 for char in keyword):
+                    # This is likely an emoji
+                    if keyword in text:
+                        emotion_scores[emotion] += 0.5  # Emojis have stronger weight
+            except (UnicodeError, ValueError):
+                # Skip if there's any Unicode issue
+                continue
     
     # Check for punctuation emphasis
     for punct, value in PUNCTUATION_EMPHASIS.items():
