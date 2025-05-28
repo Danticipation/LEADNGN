@@ -62,7 +62,7 @@ def message():
     
     user_message = data['message']
     conversation_id = session.get('session_id')
-    bot_mode = session.get('bot_mode', 'imitation')
+    bot_mode = session.get('bot_mode', 'mirror')
     
     try:
         # Process emotions in the user message
@@ -213,9 +213,26 @@ def change_mode():
     
     mode = data['mode']
     
-    # Validate the mode
-    if mode not in get_bot_modes():
+    # New streamlined mode system - only Mirror and Echo modes
+    valid_modes = ['mirror', 'echo']
+    if mode not in valid_modes:
         return jsonify({'error': 'Invalid mode'}), 400
+    
+    # Check if Echo Mode should be unlocked based on learning stage
+    if mode == 'echo':
+        conversation_id = session.get('session_id')
+        if conversation_id:
+            from bot.learning_accelerator import LearningAccelerator
+            learning_accelerator = LearningAccelerator()
+            current_stage = learning_accelerator.get_learning_stage(conversation_id)
+            
+            # Echo Mode unlocks at Child stage or higher
+            if current_stage in ['infant', 'toddler']:
+                return jsonify({
+                    'error': 'Echo Mode unlocks when your bot reaches Child stage! Keep chatting to unlock it.',
+                    'current_stage': current_stage,
+                    'required_stage': 'child'
+                }), 403
     
     # Set the new mode in the session
     session['bot_mode'] = mode

@@ -22,44 +22,36 @@ logger = logging.getLogger(__name__)
 data_dir = Path(__file__).parent.parent / 'data'
 data_dir.mkdir(exist_ok=True)
 
-# Define available bot modes and their friendly names
+# Define new streamlined bot modes and their friendly names
 BOT_MODES = {
-    'imitation': 'Imitation Mode',
-    'advanced_imitation': 'Advanced Imitation Mode',
-    'literal': 'Literal Mode',
-    'echo': 'Echo Mode',
-    'overunderstanding': 'Over-Understanding Mode',
-    'nonsense': 'Nonsense Mode'
+    'mirror': '🧠 Mirror Mode',
+    'echo': '🎭 Echo Mode'
 }
 
-def create_bot(mode='advanced_imitation'):
+def create_bot(mode='mirror'):
     """
     Factory function to create a chatbot with the specified mode
     
     Args:
-        mode (str): The bot personality mode to use
+        mode (str): The bot personality mode to use ('mirror' or 'echo')
     
     Returns:
         CustomChatBot: Configured ChatBot instance
     """
-    # Map modes to logic adapters
+    # Map new streamlined modes to logic adapters
     logic_adapter_map = {
-        'imitation': 'bot.logic_adapters.ImitationLogicAdapter',
-        'advanced_imitation': 'bot.advanced_logic_adapters.AdvancedImitationLogicAdapter',
-        'literal': 'bot.logic_adapters.LiteralLogicAdapter',
-        'echo': 'bot.logic_adapters.EchoLogicAdapter',
-        'overunderstanding': 'bot.logic_adapters.OverUnderstandingLogicAdapter',
-        'nonsense': 'bot.logic_adapters.NonsenseLogicAdapter'
+        'mirror': 'bot.advanced_logic_adapters.AdvancedImitationLogicAdapter',  # Mirror Mode uses advanced imitation
+        'echo': 'bot.logic_adapters.EchoLogicAdapter'  # Echo Mode for creative/surreal responses
     }
     
-    # Use default if an invalid mode is provided
+    # Use mirror mode as default if an invalid mode is provided
     if mode not in logic_adapter_map:
-        mode = 'advanced_imitation'
-        logger.warning(f"Invalid mode '{mode}' specified, using 'advanced_imitation' instead")
+        mode = 'mirror'
+        logger.warning(f"Invalid mode '{mode}' specified, using 'mirror' instead")
     
     # Create a new CustomChatBot instance
     bot = CustomChatBot(
-        name=f"MirrorBot-{mode.replace('advanced_', '')}",  # Keep original name but use advanced adapter
+        name=f"MirrorBot-{mode}",
         storage_adapter="bot.storage_adapters.SQLStorageAdapter",
         logic_adapters=[
             logic_adapter_map[mode]
