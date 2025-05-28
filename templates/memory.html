@@ -576,4 +576,145 @@ function displayLearningPatterns(patterns) {
     container.innerHTML = html;
 }
 </script>
+
+<style>
+/* NeuroMirror™ Growth Journal styles */
+.evolution-stages {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stage-indicator {
+    padding: 8px 12px;
+    border-radius: 20px;
+    background-color: rgba(40, 40, 40, 0.5);
+    color: #888;
+    font-size: 0.9em;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stage-indicator.active {
+    background-color: rgba(13, 202, 240, 0.2);
+    color: #0dcaf0;
+    border: 1px solid #0dcaf0;
+    box-shadow: 0 0 10px rgba(13, 202, 240, 0.3);
+}
+
+.stage-indicator.completed {
+    background-color: rgba(25, 135, 84, 0.2);
+    color: #198754;
+    border: 1px solid #198754;
+}
+
+/* Growth Timeline styles */
+.timeline-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding: 15px;
+    border-left: 3px solid #0dcaf0;
+    background-color: rgba(20, 20, 20, 0.5);
+    border-radius: 0 8px 8px 0;
+    position: relative;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 20px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #0dcaf0;
+}
+
+.timeline-icon {
+    margin-right: 15px;
+    color: #0dcaf0;
+    font-size: 1.2em;
+}
+
+.timeline-content {
+    flex: 1;
+}
+
+.timeline-title {
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.timeline-description {
+    color: #ccc;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+}
+
+.timeline-time {
+    color: #888;
+    font-size: 0.8em;
+}
+</style>
+
+<script>
+// Add Growth Timeline functionality
+document.addEventListener('DOMContentLoaded', function() {
+    loadGrowthTimeline();
+});
+
+function loadGrowthTimeline() {
+    fetch('/api/growth-timeline')
+        .then(response => response.json())
+        .then(data => {
+            displayGrowthTimeline(data);
+        })
+        .catch(error => {
+            console.error('Error loading growth timeline:', error);
+            document.getElementById('growth-timeline').innerHTML = 
+                '<div class="text-center text-muted">Unable to load timeline data</div>';
+        });
+}
+
+function displayGrowthTimeline(milestones) {
+    const container = document.getElementById('growth-timeline');
+    
+    if (!milestones || milestones.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-seedling"></i>
+                <p class="mt-2">Your NeuroMirror™ journey is just beginning!<br>
+                Start chatting to see learning milestones appear here.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    milestones.forEach(milestone => {
+        html += `
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="${milestone.icon}"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-title">${milestone.title}</div>
+                    <div class="timeline-description">${milestone.description}</div>
+                    <div class="timeline-time">${milestone.time}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+</script>
+
 {% endblock %}
