@@ -73,11 +73,6 @@
                 <i class="fas fa-comments"></i> Context
             </button>
         </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="patterns-tab" data-bs-toggle="tab" data-bs-target="#patterns" type="button" role="tab" aria-controls="patterns" aria-selected="false">
-                <i class="fas fa-project-diagram"></i> Patterns
-            </button>
-        </li>
     </ul>
     
     <!-- Tab Content -->
@@ -107,8 +102,10 @@
                     <h5>Memory Facts</h5>
                 </div>
                 <div class="card-body">
-                    <div id="memory-facts-container">
-                        <p class="text-center">Loading memory facts...</p>
+                    <div id="facts-container">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin"></i> Loading facts...
+                        </div>
                     </div>
                 </div>
             </div>
@@ -116,25 +113,14 @@
         
         <!-- Vocabulary Tab -->
         <div class="tab-pane fade" id="vocabulary" role="tabpanel" aria-labelledby="vocabulary-tab">
-            <div class="row">
-                <div class="col-md-6 mb-4">
-                    <div class="card bg-dark text-light h-100">
-                        <div class="card-header">
-                            <h5>Vocabulary Statistics</h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="vocabulary-stats"></div>
-                        </div>
-                    </div>
+            <div class="card bg-dark text-light">
+                <div class="card-header">
+                    <h5>Vocabulary Cloud</h5>
                 </div>
-                
-                <div class="col-md-6 mb-4">
-                    <div class="card bg-dark text-light h-100">
-                        <div class="card-header">
-                            <h5>Learning Patterns</h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="learning-patterns"></div>
+                <div class="card-body">
+                    <div id="vocabulary-container">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin"></i> Loading vocabulary...
                         </div>
                     </div>
                 </div>
@@ -143,57 +129,14 @@
         
         <!-- Emotions Tab -->
         <div class="tab-pane fade" id="emotions" role="tabpanel" aria-labelledby="emotions-tab">
-            <div class="row">
-                <div class="col-md-6 mb-4">
-                    <div class="card bg-dark text-light">
-                        <div class="card-header">
-                            <h5>Recent Emotions</h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="recent-emotions">
-                                <p class="text-center">Loading emotion data...</p>
-                            </div>
-                        </div>
-                    </div>
+            <div class="card bg-dark text-light">
+                <div class="card-header">
+                    <h5>Emotion Tracking</h5>
                 </div>
-                
-                <div class="col-md-6 mb-4">
-                    <div class="card bg-dark text-light">
-                        <div class="card-header">
-                            <h5>Emotion Distribution</h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="emotion-distribution">
-                                <p class="text-center">Loading distribution data...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-8 mb-4">
-                    <div class="card bg-dark text-light">
-                        <div class="card-header">
-                            <h5>Emotion Timeline</h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="emotion-timeline">
-                                <p class="text-center">Loading timeline data...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-4 mb-4">
-                    <div class="card bg-dark text-light">
-                        <div class="card-header">
-                            <h5>Emotional Patterns</h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="emotional-patterns">
-                                <p class="text-center">Loading pattern data...</p>
-                            </div>
+                <div class="card-body">
+                    <div id="emotions-container">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin"></i> Loading emotions...
                         </div>
                     </div>
                 </div>
@@ -202,380 +145,21 @@
         
         <!-- Context Tab -->
         <div class="tab-pane fade" id="context" role="tabpanel" aria-labelledby="context-tab">
-            <div class="row">
-                <div class="col-md-6 mb-4">
-                    <div class="card bg-dark text-light">
-                        <div class="card-header">
-                            <h5>Conversation Summary</h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="conversation-summary">
-                                <p class="text-center">Loading summary...</p>
-                            </div>
-                        </div>
-                    </div>
+            <div class="card bg-dark text-light">
+                <div class="card-header">
+                    <h5>Conversation Context</h5>
                 </div>
-                
-                <div class="col-md-6 mb-4">
-                    <div class="card bg-dark text-light">
-                        <div class="card-header">
-                            <h5>Recent Topics</h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="recent-topics">
-                                <p class="text-center">Loading topics...</p>
-                            </div>
+                <div class="card-body">
+                    <div id="context-container">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin"></i> Loading context...
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="row">
-                <div class="col-12 mb-4">
-                    <div class="card bg-dark text-light">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Context Intelligence</h5>
-                            <button class="btn btn-sm btn-outline-info" onclick="refreshContextData()">
-                                <i class="fas fa-sync-alt"></i> Refresh
-                            </button>
-                        </div>
-                        <div class="card-body">
-                            <div id="context-intelligence">
-                                <p class="text-center">Loading context data...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Patterns Tab -->
-        <div class="tab-pane fade" id="patterns" role="tabpanel" aria-labelledby="patterns-tab">
-            <div class="row">
-                <div class="col-12 mb-4">
-                    <div class="card bg-dark text-light">
-                        <div class="card-header">
-                            <h5>Speech Patterns</h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="speech-patterns">
-                                <p class="text-center">Loading speech patterns...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="row mt-2 mb-4">
-        <div class="col-12">
-            <a href="/" class="btn btn-primary">
-                <i class="fas fa-comment"></i> Back to Chat
-            </a>
         </div>
     </div>
 </div>
-
-{% block scripts %}
-<!-- Chart.js for visualizations -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- Custom JS files -->
-<script src="{{ url_for('static', filename='js/emotion_display.js') }}"></script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Fetch learning stats
-    fetch('/api/learning-stats')
-        .then(response => response.json())
-        .then(data => {
-            displayMemoryFacts(data.memory_facts || []);
-            displayVocabularyStats(data);
-            displayLearningPatterns(data.advanced_patterns || {});
-        })
-        .catch(error => {
-            console.error('Error fetching learning stats:', error);
-            document.getElementById('memory-facts-container').innerHTML = 
-                '<div class="alert alert-danger">Error loading memory facts. Please try again later.</div>';
-        });
-    
-    // Load context data when the context tab is shown
-    document.getElementById('context-tab').addEventListener('shown.bs.tab', function() {
-        loadContextData();
-    });
-});
-
-function loadContextData() {
-    // Load conversation summary
-    fetch('/api/conversation-summary')
-        .then(response => response.json())
-        .then(data => {
-            displayConversationSummary(data);
-        })
-        .catch(error => {
-            console.error('Error fetching conversation summary:', error);
-            document.getElementById('conversation-summary').innerHTML = 
-                '<div class="alert alert-warning">Error loading summary.</div>';
-        });
-    
-    // Load conversation context
-    fetch('/api/conversation-context')
-        .then(response => response.json())
-        .then(data => {
-            displayConversationContext(data);
-        })
-        .catch(error => {
-            console.error('Error fetching conversation context:', error);
-            document.getElementById('recent-topics').innerHTML = 
-                '<div class="alert alert-warning">Error loading topics.</div>';
-        });
-}
-
-function displayConversationSummary(data) {
-    const container = document.getElementById('conversation-summary');
-    
-    if (data.error) {
-        container.innerHTML = '<div class="alert alert-warning">Unable to generate summary.</div>';
-        return;
-    }
-    
-    let html = `<p class="lead">${data.summary}</p>`;
-    
-    if (data.key_topics && data.key_topics.length > 0) {
-        html += '<h6 class="mt-3">Key Topics:</h6>';
-        html += '<div class="d-flex flex-wrap gap-2">';
-        data.key_topics.forEach(topic => {
-            html += `<span class="badge bg-info">${topic}</span>`;
-        });
-        html += '</div>';
-    }
-    
-    if (data.user_interests && data.user_interests.length > 0) {
-        html += '<h6 class="mt-3">Your Interests:</h6>';
-        html += '<div class="d-flex flex-wrap gap-2">';
-        data.user_interests.forEach(interest => {
-            html += `<span class="badge bg-success">${interest}</span>`;
-        });
-        html += '</div>';
-    }
-    
-    if (data.message_breakdown) {
-        html += '<div class="row mt-3">';
-        html += '<div class="col-6 text-center">';
-        html += `<div class="h5 text-info">${data.message_breakdown.user_messages}</div>`;
-        html += '<small class="text-muted">Your Messages</small>';
-        html += '</div>';
-        html += '<div class="col-6 text-center">';
-        html += `<div class="h5 text-warning">${data.message_breakdown.bot_messages}</div>`;
-        html += '<small class="text-muted">Bot Responses</small>';
-        html += '</div>';
-        html += '</div>';
-    }
-    
-    container.innerHTML = html;
-}
-
-function displayConversationContext(data) {
-    const topicsContainer = document.getElementById('recent-topics');
-    const intelligenceContainer = document.getElementById('context-intelligence');
-    
-    // Display recent topics
-    if (data.recent_topics && data.recent_topics.length > 0) {
-        let topicsHtml = '<h6>Most Discussed Topics:</h6>';
-        topicsHtml += '<div class="list-group">';
-        
-        data.recent_topics.forEach(([topic, count]) => {
-            topicsHtml += `
-            <div class="list-group-item list-group-item-action bg-dark text-light d-flex justify-content-between align-items-center">
-                ${topic}
-                <span class="badge bg-primary rounded-pill">${count}</span>
-            </div>`;
-        });
-        
-        topicsHtml += '</div>';
-        topicsContainer.innerHTML = topicsHtml;
-    } else {
-        topicsContainer.innerHTML = '<p class="text-center text-muted">No topics identified yet. Continue chatting!</p>';
-    }
-    
-    // Display context intelligence
-    let intelligenceHtml = '<div class="row">';
-    
-    // Context count
-    intelligenceHtml += '<div class="col-md-4 text-center mb-3">';
-    intelligenceHtml += `<div class="h3 text-info">${data.context_count || 0}</div>`;
-    intelligenceHtml += '<small class="text-muted">Conversation Contexts</small>';
-    intelligenceHtml += '</div>';
-    
-    // Keywords count
-    const keywordCount = data.recent_keywords ? data.recent_keywords.length : 0;
-    intelligenceHtml += '<div class="col-md-4 text-center mb-3">';
-    intelligenceHtml += `<div class="h3 text-success">${keywordCount}</div>`;
-    intelligenceHtml += '<small class="text-muted">Active Keywords</small>';
-    intelligenceHtml += '</div>';
-    
-    // Entities count
-    const entityCount = data.recent_entities ? data.recent_entities.length : 0;
-    intelligenceHtml += '<div class="col-md-4 text-center mb-3">';
-    intelligenceHtml += `<div class="h3 text-warning">${entityCount}</div>`;
-    intelligenceHtml += '<small class="text-muted">Named Entities</small>';
-    intelligenceHtml += '</div>';
-    
-    intelligenceHtml += '</div>';
-    
-    // Show recent keywords if available
-    if (data.recent_keywords && data.recent_keywords.length > 0) {
-        intelligenceHtml += '<h6 class="mt-3">Recent Keywords:</h6>';
-        intelligenceHtml += '<div class="d-flex flex-wrap gap-2">';
-        data.recent_keywords.slice(0, 10).forEach(([keyword, count]) => {
-            intelligenceHtml += `<span class="badge bg-secondary">${keyword} (${count})</span>`;
-        });
-        intelligenceHtml += '</div>';
-    }
-    
-    intelligenceContainer.innerHTML = intelligenceHtml;
-}
-
-function refreshContextData() {
-    document.getElementById('conversation-summary').innerHTML = '<p class="text-center">Refreshing summary...</p>';
-    document.getElementById('recent-topics').innerHTML = '<p class="text-center">Refreshing topics...</p>';
-    document.getElementById('context-intelligence').innerHTML = '<p class="text-center">Refreshing context...</p>';
-    
-    loadContextData();
-}
-
-function displayMemoryFacts(facts) {
-    const container = document.getElementById('memory-facts-container');
-    
-    if (!facts || facts.length === 0) {
-        container.innerHTML = '<p class="text-center">No memory facts learned yet. Try chatting more!</p>';
-        return;
-    }
-    
-    // For mobile, we'll use cards instead of a table
-    if (window.innerWidth < 768) {
-        let html = '<div class="memory-cards">';
-        
-        facts.forEach(fact => {
-            const date = new Date(fact.updated_at);
-            const formattedDate = date.toLocaleString();
-            
-            html += `
-            <div class="card bg-dark text-light border-secondary mb-3">
-                <div class="card-header d-flex justify-content-between">
-                    <strong>${fact.subject}</strong>
-                    <span class="badge bg-info">${(fact.confidence * 100).toFixed(1)}%</span>
-                </div>
-                <div class="card-body">
-                    <p class="card-text">${fact.fact}</p>
-                    <div class="d-flex justify-content-between">
-                        <small class="text-muted">Mentioned ${fact.mentioned_count} time(s)</small>
-                        <small class="text-muted">${formattedDate}</small>
-                    </div>
-                </div>
-            </div>`;
-        });
-        
-        html += '</div>';
-        container.innerHTML = html;
-    } else {
-        // For desktop, use a responsive table
-        let html = '<div class="table-responsive">';
-        html += '<table class="table table-striped table-dark">';
-        html += '<thead><tr><th>Subject</th><th>Fact</th><th>Confidence</th><th>Mentions</th><th>Last Updated</th></tr></thead>';
-        html += '<tbody>';
-        
-        facts.forEach(fact => {
-            const date = new Date(fact.updated_at);
-            const formattedDate = date.toLocaleString();
-            
-            html += `<tr>
-                <td>${fact.subject}</td>
-                <td>${fact.fact}</td>
-                <td>${(fact.confidence * 100).toFixed(1)}%</td>
-                <td>${fact.mentioned_count}</td>
-                <td>${formattedDate}</td>
-            </tr>`;
-        });
-        
-        html += '</tbody></table></div>';
-        container.innerHTML = html;
-    }
-}
-
-function displayVocabularyStats(data) {
-    const container = document.getElementById('vocabulary-stats');
-    
-    if (!data.vocabulary || data.vocabulary.length === 0) {
-        container.innerHTML = '<p class="text-center">No vocabulary learned yet.</p>';
-        return;
-    }
-    
-    let html = `<p>Total words learned: <strong>${data.total}</strong></p>`;
-    
-    // For mobile and desktop
-    html += '<div class="mb-3">';
-    html += '<h6 class="text-muted">Top 10 Most Frequent Words</h6>';
-    
-    // Display top 10 most frequent words with badges for frequency
-    const topWords = data.vocabulary.slice(0, 10);
-    
-    if (window.innerWidth < 768) {
-        // For mobile: display as buttons with badges
-        topWords.forEach(word => {
-            html += `<div class="d-inline-block me-2 mb-2">
-                <span class="btn btn-sm btn-outline-secondary position-relative">
-                    ${word.word}
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info">
-                        ${word.frequency}
-                    </span>
-                </span>
-            </div>`;
-        });
-    } else {
-        // For desktop: display as table
-        html += '<table class="table table-sm table-dark"><thead><tr><th>Word</th><th>Frequency</th></tr></thead><tbody>';
-        topWords.forEach(word => {
-            html += `<tr><td>${word.word}</td><td>${word.frequency}</td></tr>`;
-        });
-        html += '</tbody></table>';
-    }
-    
-    html += '</div>';
-    container.innerHTML = html;
-}
-
-function displayLearningPatterns(patterns) {
-    const container = document.getElementById('learning-patterns');
-    
-    if (!patterns.counts || Object.keys(patterns.counts).length === 0) {
-        container.innerHTML = '<p class="text-center">No learning patterns detected yet.</p>';
-        return;
-    }
-    
-    let html = '<ul class="list-group">';
-    
-    for (const [patternType, count] of Object.entries(patterns.counts)) {
-        let displayType = patternType;
-        if (patternType === 'ngram') displayType = 'Word Phrases';
-        if (patternType === 'pos_sequence') displayType = 'Grammar Patterns';
-        
-        html += `<li class="list-group-item d-flex justify-content-between align-items-center">
-            ${displayType}
-            <span class="badge bg-primary rounded-pill">${count}</span>
-        </li>`;
-    }
-    
-    html += '</ul>';
-    
-    if (patterns.template_count) {
-        html += `<p class="mt-3">Sentence Templates: <strong>${patterns.template_count}</strong></p>`;
-    }
-    
-    container.innerHTML = html;
-}
-</script>
 
 <style>
 /* NeuroMirror™ Growth Journal styles */
@@ -664,6 +248,7 @@ function displayLearningPatterns(patterns) {
 }
 </style>
 
+<script src="{{ url_for('static', filename='js/learning.js') }}"></script>
 <script>
 // Add Growth Timeline functionality
 document.addEventListener('DOMContentLoaded', function() {
@@ -716,5 +301,4 @@ function displayGrowthTimeline(milestones) {
     container.innerHTML = html;
 }
 </script>
-
 {% endblock %}
