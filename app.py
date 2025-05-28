@@ -69,17 +69,24 @@ def message():
         from bot.emotion_manager import EmotionManager
         from bot.sentiment_analyzer import analyze_sentiment, add_emotional_style
         from bot.context_manager import ContextManager
+        from bot.learning_accelerator import LearningAccelerator
+        
+        # Initialize managers
+        emotion_manager = EmotionManager()
+        context_manager = ContextManager()
+        learning_accelerator = LearningAccelerator()
+        
+        # Get current learning stage
+        current_stage = learning_accelerator.get_learning_stage(conversation_id)
+        response_style = learning_accelerator.get_response_style_for_stage(current_stage)
         
         # Analyze emotion in the user message
-        emotion_manager = EmotionManager()
         emotion_data = analyze_sentiment(user_message)
-        
-        # Initialize context manager
-        context_manager = ContextManager()
         
         # Check if this is a question that can be answered from context
         question_answer = None
-        if any(word in user_message.lower() for word in ['what', 'who', 'when', 'where', 'why', 'how', 'do you remember', 'did i', 'have i']):
+        if (response_style['question_answering'] and 
+            any(word in user_message.lower() for word in ['what', 'who', 'when', 'where', 'why', 'how', 'do you remember', 'did i', 'have i'])):
             question_answer = context_manager.answer_question_from_context(user_message, conversation_id)
         
         # Get bot response using the appropriate bot mode
@@ -88,22 +95,36 @@ def message():
         # If we have a direct answer to the question, use it, otherwise get normal response
         if question_answer:
             bot_response_text = question_answer
-            # Create a mock response object for consistency
-            class MockResponse:
+            # Create a response object for consistency
+            class IntelligentResponse:
                 def __init__(self, text):
                     self.text = text
                     self.confidence = 0.9
                 def __str__(self):
                     return self.text
-            bot_response = MockResponse(bot_response_text)
+            bot_response = IntelligentResponse(bot_response_text)
         else:
-            bot_response = bot.get_response(
-                user_message,
-                additional_response_selection_parameters={
-                    'conversation_id': conversation_id,
-                    'emotion_data': emotion_data  # Pass emotion data to the bot
-                }
-            )
+            # Get response from the bot based on learning stage
+            if current_stage in ['infant', 'toddler'] and response_style['repetition_chance'] > 0.5:
+                # For early stages, use more repetitive responses
+                bot_response = bot.get_response(
+                    user_message,
+                    additional_response_selection_parameters={
+                        'conversation_id': conversation_id,
+                        'emotion_data': emotion_data,
+                        'learning_stage': current_stage
+                    }
+                )
+            else:
+                # For advanced stages, try to be more conversational
+                bot_response = bot.get_response(
+                    user_message,
+                    additional_response_selection_parameters={
+                        'conversation_id': conversation_id,
+                        'emotion_data': emotion_data,
+                        'learning_stage': current_stage
+                    }
+                )
         
         # Save messages to database
         with app.app_context():
@@ -160,6 +181,9 @@ def message():
             if styled_response != response_text:
                 response_text = styled_response
         
+        # Get learning progress for response
+        learning_progress = learning_accelerator.get_learning_progress(conversation_id)
+        
         return jsonify({
             'response': response_text,
             'confidence': bot_response.confidence if hasattr(bot_response, 'confidence') else 0,
@@ -167,6 +191,11 @@ def message():
                 'detected': emotion_data['primary_emotion'],
                 'confidence': emotion_data['confidence'],
                 'intensity': emotion_data['intensity']
+            },
+            'learning': {
+                'stage': current_stage,
+                'progress': learning_progress['next_stage_progress'],
+                'capabilities': learning_progress['capabilities']
             }
         })
         
@@ -402,6 +431,26 @@ def conversation_context():
     except Exception as e:
         logger.error(f"Error retrieving conversation context: {str(e)}")
         return jsonify({'error': 'An error occurred retrieving context'}), 500
+
+@app.route('/api/learning-progress', methods=['GET'])
+def learning_progress():
+    """Get detailed learning progress information"""
+    conversation_id = session.get('session_id')
+    
+    if not conversation_id:
+        return jsonify({'current_stage': 'infant', 'progress': 0})
+    
+    try:
+        from bot.learning_accelerator import LearningAccelerator
+        
+        learning_accelerator = LearningAccelerator()
+        progress_data = learning_accelerator.get_learning_progress(conversation_id)
+        
+        return jsonify(progress_data)
+    
+    except Exception as e:
+        logger.error(f"Error retrieving learning progress: {str(e)}")
+        return jsonify({'error': 'An error occurred retrieving learning progress'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
