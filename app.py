@@ -469,5 +469,84 @@ def learning_progress():
         logger.error(f"Error retrieving learning progress: {str(e)}")
         return jsonify({'error': 'An error occurred retrieving learning progress'}), 500
 
+@app.route('/api/growth-timeline', methods=['GET'])
+def growth_timeline():
+    """Get learning milestones timeline for NeuroMirror™ Growth Journal"""
+    conversation_id = session.get('session_id')
+    
+    if not conversation_id:
+        return jsonify([])
+    
+    try:
+        from bot.learning_accelerator import LearningAccelerator
+        from datetime import datetime
+        
+        learning_accelerator = LearningAccelerator()
+        progress_data = learning_accelerator.get_learning_progress(conversation_id)
+        
+        # Generate milestones based on actual learning data
+        milestones = []
+        stats = progress_data.get('stats', {})
+        current_stage = progress_data.get('current_stage', 'infant')
+        
+        # Add milestones based on actual achievements
+        if stats.get('message_count', 0) >= 1:
+            milestones.append({
+                'title': 'First Words Spoken',
+                'description': f'Your NeuroMirror™ heard its first message and began learning',
+                'icon': 'fas fa-baby',
+                'time': 'Learning session began'
+            })
+        
+        if stats.get('vocabulary_count', 0) >= 5:
+            milestones.append({
+                'title': 'Vocabulary Building',
+                'description': f'Learned {stats["vocabulary_count"]} unique words from your conversations',
+                'icon': 'fas fa-book-open',
+                'time': f'{stats["vocabulary_count"]} words accumulated'
+            })
+        
+        if current_stage != 'infant':
+            stage_names = {'toddler': 'Toddler', 'child': 'Child', 'adolescent': 'Adolescent', 'adult': 'Adult'}
+            milestones.append({
+                'title': f'Evolved to {stage_names.get(current_stage, current_stage.title())} Stage',
+                'description': f'Reached {current_stage} developmental stage with enhanced capabilities',
+                'icon': 'fas fa-brain',
+                'time': 'Stage progression achieved'
+            })
+        
+        if stats.get('facts_count', 0) >= 1:
+            milestones.append({
+                'title': 'Personal Facts Learned',
+                'description': f'Stored {stats["facts_count"]} personal facts about you for future reference',
+                'icon': 'fas fa-lightbulb',
+                'time': f'{stats["facts_count"]} facts remembered'
+            })
+        
+        if current_stage in ['child', 'adolescent', 'adult']:
+            milestones.append({
+                'title': 'Echo Mode Unlocked',
+                'description': 'Advanced enough to access creative Echo Mode for surreal conversations',
+                'icon': 'fas fa-theater-masks',
+                'time': 'Creative mode available'
+            })
+        
+        if stats.get('message_count', 0) >= 20:
+            milestones.append({
+                'title': 'Deep Conversation Partner',
+                'description': f'Engaged in {stats["message_count"]} meaningful exchanges, building relationship depth',
+                'icon': 'fas fa-comments',
+                'time': f'{stats["message_count"]} messages exchanged'
+            })
+        
+        # Reverse chronological order (most recent first)
+        milestones.reverse()
+        
+        return jsonify(milestones)
+    
+    except Exception as e:
+        logger.error(f"Error retrieving growth timeline: {str(e)}")
+        return jsonify({'error': 'An error occurred retrieving timeline'}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
