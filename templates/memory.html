@@ -1,17 +1,61 @@
 {% extends 'base.html' %}
 
-{% block title %}MirrorBot - Memory{% endblock %}
+{% block title %}Growth Journal - NeuroMirror™{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">MirrorBot Memory</h1>
-    <p class="lead">View what your MirrorBot has learned about you.</p>
+    <h1 class="mb-4">
+        <i class="fas fa-chart-line text-info"></i> Growth Journal
+        <small class="text-info">NeuroMirror™</small>
+    </h1>
+    <p class="lead">Watch your AI companion evolve from parrot to partner</p>
     
+    <!-- NeuroMirror Evolution Progress -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-dark border-secondary">
+                <div class="card-header">
+                    <h5 class="mb-0 text-info">
+                        <i class="fas fa-brain"></i> NeuroMirror™ Evolution
+                    </h5>
+                    <small class="text-muted">From Parrot to Partner</small>
+                </div>
+                <div class="card-body">
+                    <div class="learning-container">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div id="learning-stage" class="h6 text-light mb-2">Learning Stage: Loading...</div>
+                                <div class="progress mb-3" style="height: 25px;">
+                                    <div id="learning-progress" class="progress-bar bg-info" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div id="stage-capabilities" class="stage-capabilities"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="evolution-stages">
+                                    <div class="stage-indicator infant">🍼 Infant</div>
+                                    <div class="stage-indicator toddler">🚼 Toddler</div>
+                                    <div class="stage-indicator child active">🧒 Child</div>
+                                    <div class="stage-indicator adolescent">🧑 Adolescent</div>
+                                    <div class="stage-indicator adult">👤 Adult</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Navigation Tabs -->
     <ul class="nav nav-tabs mb-4" id="memory-tabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="facts-tab" data-bs-toggle="tab" data-bs-target="#facts" type="button" role="tab" aria-controls="facts" aria-selected="true">
-                <i class="fas fa-lightbulb"></i> Facts
+            <button class="nav-link active" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab" aria-controls="timeline" aria-selected="true">
+                <i class="fas fa-clock"></i> Growth Timeline
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="facts-tab" data-bs-toggle="tab" data-bs-target="#facts" type="button" role="tab" aria-controls="facts" aria-selected="false">
+                <i class="fas fa-lightbulb"></i> Facts Learned
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -38,8 +82,26 @@
     
     <!-- Tab Content -->
     <div class="tab-content" id="memory-tab-content">
+        <!-- Growth Timeline Tab -->
+        <div class="tab-pane fade show active" id="timeline" role="tabpanel" aria-labelledby="timeline-tab">
+            <div class="card bg-dark border-secondary">
+                <div class="card-header">
+                    <h5 class="mb-0 text-light">
+                        <i class="fas fa-timeline"></i> Learning Milestones
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="growth-timeline" class="timeline-container">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin"></i> Loading growth timeline...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Facts Tab -->
-        <div class="tab-pane fade show active" id="facts" role="tabpanel" aria-labelledby="facts-tab">
+        <div class="tab-pane fade" id="facts" role="tabpanel" aria-labelledby="facts-tab">
             <div class="card bg-dark text-light">
                 <div class="card-header">
                     <h5>Memory Facts</h5>
