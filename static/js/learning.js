@@ -16,19 +16,30 @@ document.addEventListener('DOMContentLoaded', () => {
  * Update learning statistics and visualization
  */
 function updateLearningStats() {
-    fetch('/api/learning-stats')
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            console.error('Error fetching learning stats:', data.error);
+    // Fetch both learning stats and accelerated learning progress
+    Promise.all([
+        fetch('/api/learning-stats').then(r => r.json()),
+        fetch('/api/learning-progress').then(r => r.json())
+    ])
+    .then(([statsData, progressData]) => {
+        if (statsData.error) {
+            console.error('Error fetching learning stats:', statsData.error);
             return;
         }
         
-        updateVocabularyDisplay(data);
-        updateLearningStage(data);
+        updateVocabularyDisplay(statsData);
+        updateAcceleratedLearningStage(statsData, progressData);
     })
     .catch(error => {
         console.error('Error:', error);
+        // Fallback to old method
+        fetch('/api/learning-stats')
+            .then(response => response.json())
+            .then(data => {
+                updateVocabularyDisplay(data);
+                updateLearningStage(data);
+            })
+            .catch(err => console.error('Fallback error:', err));
     });
 }
 
@@ -88,7 +99,98 @@ function updateVocabularyDisplay(data) {
 }
 
 /**
- * Update the learning stage display
+ * Update the accelerated learning stage display
+ * @param {Object} statsData - Learning statistics data
+ * @param {Object} progressData - Learning progress data
+ */
+function updateAcceleratedLearningStage(statsData, progressData) {
+    if (!progressData || !progressData.current_stage) {
+        // Fallback to old method
+        updateLearningStage(statsData);
+        return;
+    }
+    
+    const currentStage = progressData.current_stage;
+    const progress = progressData.next_stage_progress || 0;
+    const capabilities = progressData.capabilities || [];
+    
+    // Update learning stage text with proper capitalization
+    const stageNames = {
+        'infant': 'Infant',
+        'toddler': 'Toddler', 
+        'child': 'Child',
+        'adolescent': 'Adolescent',
+        'adult': 'Adult'
+    };
+    
+    learningStageText.textContent = `Learning Stage: ${stageNames[currentStage] || currentStage}`;
+    
+    // Update progress bar
+    learningProgress.style.width = `${progress}%`;
+    learningProgress.setAttribute('aria-valuenow', progress);
+    
+    // Change progress bar color based on stage
+    const stageColors = {
+        'infant': 'bg-info',
+        'toddler': 'bg-primary', 
+        'child': 'bg-success',
+        'adolescent': 'bg-warning',
+        'adult': 'bg-danger'
+    };
+    
+    // Remove existing color classes
+    Object.values(stageColors).forEach(color => {
+        learningProgress.classList.remove(color);
+    });
+    
+    // Add current stage color
+    learningProgress.classList.add(stageColors[currentStage] || 'bg-info');
+    
+    // Update progress tooltip with stage info
+    const stats = progressData.stats || {};
+    learningProgress.title = `${stats.message_count || 0} messages, ${stats.vocabulary_count || 0} words, ${stats.facts_count || 0} facts learned. ${Math.round(100 - progress)}% to next stage.`;
+    
+    // Display capabilities if available
+    if (capabilities.length > 0) {
+        displayStageCapabilities(capabilities);
+    }
+}
+
+/**
+ * Display current stage capabilities
+ * @param {Array} capabilities - List of current capabilities
+ */
+function displayStageCapabilities(capabilities) {
+    // Get or create capabilities container
+    let capabilitiesContainer = document.getElementById('stage-capabilities');
+    if (!capabilitiesContainer) {
+        const learningContainer = document.querySelector('.learning-container');
+        if (!learningContainer) return;
+        
+        const heading = document.createElement('h6');
+        heading.className = 'text-light mt-3';
+        heading.textContent = 'Current Capabilities';
+        learningContainer.appendChild(heading);
+        
+        capabilitiesContainer = document.createElement('div');
+        capabilitiesContainer.id = 'stage-capabilities';
+        capabilitiesContainer.className = 'stage-capabilities mt-2';
+        learningContainer.appendChild(capabilitiesContainer);
+    }
+    
+    // Clear and update capabilities
+    capabilitiesContainer.innerHTML = '';
+    
+    capabilities.forEach(capability => {
+        const capabilityItem = document.createElement('div');
+        capabilityItem.className = 'capability-item small text-success';
+        capabilityItem.innerHTML = `<i class="fas fa-check"></i> ${capability}`;
+        capabilitiesContainer.appendChild(capabilityItem);
+    });
+}
+
+/**
+ * Update the learning stage display (fallback method)
  * @param {Object} data - Learning statistics data
  */
 function updateLearningStage(data) {
