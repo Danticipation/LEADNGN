@@ -25,6 +25,11 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="context-tab" data-bs-toggle="tab" data-bs-target="#context" type="button" role="tab" aria-controls="context" aria-selected="false">
+                <i class="fas fa-comments"></i> Context
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="patterns-tab" data-bs-toggle="tab" data-bs-target="#patterns" type="button" role="tab" aria-controls="patterns" aria-selected="false">
                 <i class="fas fa-project-diagram"></i> Patterns
             </button>
@@ -133,6 +138,55 @@
             </div>
         </div>
         
+        <!-- Context Tab -->
+        <div class="tab-pane fade" id="context" role="tabpanel" aria-labelledby="context-tab">
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card bg-dark text-light">
+                        <div class="card-header">
+                            <h5>Conversation Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="conversation-summary">
+                                <p class="text-center">Loading summary...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card bg-dark text-light">
+                        <div class="card-header">
+                            <h5>Recent Topics</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="recent-topics">
+                                <p class="text-center">Loading topics...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <div class="card bg-dark text-light">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Context Intelligence</h5>
+                            <button class="btn btn-sm btn-outline-info" onclick="refreshContextData()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="context-intelligence">
+                                <p class="text-center">Loading context data...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Patterns Tab -->
         <div class="tab-pane fade" id="patterns" role="tabpanel" aria-labelledby="patterns-tab">
             <div class="row">
@@ -183,7 +237,151 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('memory-facts-container').innerHTML = 
                 '<div class="alert alert-danger">Error loading memory facts. Please try again later.</div>';
         });
+    
+    // Load context data when the context tab is shown
+    document.getElementById('context-tab').addEventListener('shown.bs.tab', function() {
+        loadContextData();
+    });
 });
+
+function loadContextData() {
+    // Load conversation summary
+    fetch('/api/conversation-summary')
+        .then(response => response.json())
+        .then(data => {
+            displayConversationSummary(data);
+        })
+        .catch(error => {
+            console.error('Error fetching conversation summary:', error);
+            document.getElementById('conversation-summary').innerHTML = 
+                '<div class="alert alert-warning">Error loading summary.</div>';
+        });
+    
+    // Load conversation context
+    fetch('/api/conversation-context')
+        .then(response => response.json())
+        .then(data => {
+            displayConversationContext(data);
+        })
+        .catch(error => {
+            console.error('Error fetching conversation context:', error);
+            document.getElementById('recent-topics').innerHTML = 
+                '<div class="alert alert-warning">Error loading topics.</div>';
+        });
+}
+
+function displayConversationSummary(data) {
+    const container = document.getElementById('conversation-summary');
+    
+    if (data.error) {
+        container.innerHTML = '<div class="alert alert-warning">Unable to generate summary.</div>';
+        return;
+    }
+    
+    let html = `<p class="lead">${data.summary}</p>`;
+    
+    if (data.key_topics && data.key_topics.length > 0) {
+        html += '<h6 class="mt-3">Key Topics:</h6>';
+        html += '<div class="d-flex flex-wrap gap-2">';
+        data.key_topics.forEach(topic => {
+            html += `<span class="badge bg-info">${topic}</span>`;
+        });
+        html += '</div>';
+    }
+    
+    if (data.user_interests && data.user_interests.length > 0) {
+        html += '<h6 class="mt-3">Your Interests:</h6>';
+        html += '<div class="d-flex flex-wrap gap-2">';
+        data.user_interests.forEach(interest => {
+            html += `<span class="badge bg-success">${interest}</span>`;
+        });
+        html += '</div>';
+    }
+    
+    if (data.message_breakdown) {
+        html += '<div class="row mt-3">';
+        html += '<div class="col-6 text-center">';
+        html += `<div class="h5 text-info">${data.message_breakdown.user_messages}</div>`;
+        html += '<small class="text-muted">Your Messages</small>';
+        html += '</div>';
+        html += '<div class="col-6 text-center">';
+        html += `<div class="h5 text-warning">${data.message_breakdown.bot_messages}</div>`;
+        html += '<small class="text-muted">Bot Responses</small>';
+        html += '</div>';
+        html += '</div>';
+    }
+    
+    container.innerHTML = html;
+}
+
+function displayConversationContext(data) {
+    const topicsContainer = document.getElementById('recent-topics');
+    const intelligenceContainer = document.getElementById('context-intelligence');
+    
+    // Display recent topics
+    if (data.recent_topics && data.recent_topics.length > 0) {
+        let topicsHtml = '<h6>Most Discussed Topics:</h6>';
+        topicsHtml += '<div class="list-group">';
+        
+        data.recent_topics.forEach(([topic, count]) => {
+            topicsHtml += `
+            <div class="list-group-item list-group-item-action bg-dark text-light d-flex justify-content-between align-items-center">
+                ${topic}
+                <span class="badge bg-primary rounded-pill">${count}</span>
+            </div>`;
+        });
+        
+        topicsHtml += '</div>';
+        topicsContainer.innerHTML = topicsHtml;
+    } else {
+        topicsContainer.innerHTML = '<p class="text-center text-muted">No topics identified yet. Continue chatting!</p>';
+    }
+    
+    // Display context intelligence
+    let intelligenceHtml = '<div class="row">';
+    
+    // Context count
+    intelligenceHtml += '<div class="col-md-4 text-center mb-3">';
+    intelligenceHtml += `<div class="h3 text-info">${data.context_count || 0}</div>`;
+    intelligenceHtml += '<small class="text-muted">Conversation Contexts</small>';
+    intelligenceHtml += '</div>';
+    
+    // Keywords count
+    const keywordCount = data.recent_keywords ? data.recent_keywords.length : 0;
+    intelligenceHtml += '<div class="col-md-4 text-center mb-3">';
+    intelligenceHtml += `<div class="h3 text-success">${keywordCount}</div>`;
+    intelligenceHtml += '<small class="text-muted">Active Keywords</small>';
+    intelligenceHtml += '</div>';
+    
+    // Entities count
+    const entityCount = data.recent_entities ? data.recent_entities.length : 0;
+    intelligenceHtml += '<div class="col-md-4 text-center mb-3">';
+    intelligenceHtml += `<div class="h3 text-warning">${entityCount}</div>`;
+    intelligenceHtml += '<small class="text-muted">Named Entities</small>';
+    intelligenceHtml += '</div>';
+    
+    intelligenceHtml += '</div>';
+    
+    // Show recent keywords if available
+    if (data.recent_keywords && data.recent_keywords.length > 0) {
+        intelligenceHtml += '<h6 class="mt-3">Recent Keywords:</h6>';
+        intelligenceHtml += '<div class="d-flex flex-wrap gap-2">';
+        data.recent_keywords.slice(0, 10).forEach(([keyword, count]) => {
+            intelligenceHtml += `<span class="badge bg-secondary">${keyword} (${count})</span>`;
+        });
+        intelligenceHtml += '</div>';
+    }
+    
+    intelligenceContainer.innerHTML = intelligenceHtml;
+}
+
+function refreshContextData() {
+    document.getElementById('conversation-summary').innerHTML = '<p class="text-center">Refreshing summary...</p>';
+    document.getElementById('recent-topics').innerHTML = '<p class="text-center">Refreshing topics...</p>';
+    document.getElementById('context-intelligence').innerHTML = '<p class="text-center">Refreshing context...</p>';
+    
+    loadContextData();
+}
 
 function displayMemoryFacts(facts) {
     const container = document.getElementById('memory-facts-container');

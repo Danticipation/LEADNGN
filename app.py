@@ -68,20 +68,42 @@ def message():
         # Process emotions in the user message
         from bot.emotion_manager import EmotionManager
         from bot.sentiment_analyzer import analyze_sentiment, add_emotional_style
+        from bot.context_manager import ContextManager
         
         # Analyze emotion in the user message
         emotion_manager = EmotionManager()
         emotion_data = analyze_sentiment(user_message)
         
+        # Initialize context manager
+        context_manager = ContextManager()
+        
+        # Check if this is a question that can be answered from context
+        question_answer = None
+        if any(word in user_message.lower() for word in ['what', 'who', 'when', 'where', 'why', 'how', 'do you remember', 'did i', 'have i']):
+            question_answer = context_manager.answer_question_from_context(user_message, conversation_id)
+        
         # Get bot response using the appropriate bot mode
         bot = create_bot(mode=bot_mode)
-        bot_response = bot.get_response(
-            user_message,
-            additional_response_selection_parameters={
-                'conversation_id': conversation_id,
-                'emotion_data': emotion_data  # Pass emotion data to the bot
-            }
-        )
+        
+        # If we have a direct answer to the question, use it, otherwise get normal response
+        if question_answer:
+            bot_response_text = question_answer
+            # Create a mock response object for consistency
+            class MockResponse:
+                def __init__(self, text):
+                    self.text = text
+                    self.confidence = 0.9
+                def __str__(self):
+                    return self.text
+            bot_response = MockResponse(bot_response_text)
+        else:
+            bot_response = bot.get_response(
+                user_message,
+                additional_response_selection_parameters={
+                    'conversation_id': conversation_id,
+                    'emotion_data': emotion_data  # Pass emotion data to the bot
+                }
+            )
         
         # Save messages to database
         with app.app_context():
@@ -112,6 +134,14 @@ def message():
             
             db.session.add(bot_msg)
             db.session.commit()
+        
+        # Update conversation context with the new messages
+        context_manager.update_conversation_context(
+            user_message, 
+            str(bot_response), 
+            conversation_id, 
+            bot_mode
+        )
         
         # Add emotion styling to response in certain cases
         response_text = str(bot_response)
@@ -332,6 +362,46 @@ def emotion_stats():
     except Exception as e:
         logger.error(f"Error retrieving emotion stats: {str(e)}")
         return jsonify({'error': 'An error occurred retrieving emotion stats'}), 500
+
+@app.route('/api/conversation-summary', methods=['GET'])
+def conversation_summary():
+    """Get a summary of the current conversation"""
+    conversation_id = session.get('session_id')
+    
+    if not conversation_id:
+        return jsonify({'summary': 'No conversation available to summarize.'})
+    
+    try:
+        from bot.context_manager import ContextManager
+        
+        context_manager = ContextManager()
+        summary_data = context_manager.summarize_conversation(conversation_id)
+        
+        return jsonify(summary_data)
+    
+    except Exception as e:
+        logger.error(f"Error generating conversation summary: {str(e)}")
+        return jsonify({'error': 'An error occurred generating the summary'}), 500
+
+@app.route('/api/conversation-context', methods=['GET'])
+def conversation_context():
+    """Get recent conversation context and topics"""
+    conversation_id = session.get('session_id')
+    
+    if not conversation_id:
+        return jsonify({'recent_topics': [], 'recent_keywords': []})
+    
+    try:
+        from bot.context_manager import ContextManager
+        
+        context_manager = ContextManager()
+        context_data = context_manager.get_conversation_context(conversation_id)
+        
+        return jsonify(context_data)
+    
+    except Exception as e:
+        logger.error(f"Error retrieving conversation context: {str(e)}")
+        return jsonify({'error': 'An error occurred retrieving context'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
