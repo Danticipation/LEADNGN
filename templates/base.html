@@ -3,58 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MirrorBot - Learning AI Chatbot</title>
+    <title>{% block title %}LeadNGN - Lead Management System{% endblock %}</title>
     
-    <!-- Bootstrap dark theme CSS -->
-    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
-    
-    <!-- Font Awesome for icons -->
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .lead-score-high {
+            color: #198754;
+            font-weight: bold;
+        }
+        
+        .lead-score-medium {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        
+        .lead-score-low {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #1e2124 0%, #2f3136 100%);
+            border: 1px solid #40444b;
+            border-radius: 12px;
+            transition: transform 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .lead-table th {
+            background-color: #36393f;
+            border-bottom: 2px solid #40444b;
+        }
+        
+        .lead-row {
+            border-bottom: 1px solid #40444b;
+            transition: background-color 0.2s ease;
+        }
+        
+        .lead-row:hover {
+            background-color: #2f3136;
+        }
+        
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+        }
+        
+        .industry-tag {
+            background-color: #0dcaf0;
+            color: #000;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 8px;
+            margin-right: 0.25rem;
+        }
+    </style>
 </head>
-<body class="bg-dark">
+<body>
+    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
+        <div class="container-fluid">
             <a class="navbar-brand" href="/">
-                <img src="{{ url_for('static', filename='images/robot.svg') }}" alt="MirrorBot" height="30">
-                MirrorBot
+                <i class="fas fa-search-dollar text-primary me-2"></i>
+                LeadNGN
             </a>
+            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/memory">
-                            <i class="fas fa-brain"></i> Bot Memory
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="https://github.com/gunthercox/ChatterBot" target="_blank">
-                            <i class="fab fa-github"></i> Source
+                        <a class="nav-link" href="/leads">
+                            <i class="fas fa-users me-1"></i>Leads
                         </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/scraping">
+                            <i class="fas fa-spider me-1"></i>Scraping
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog me-1"></i>Settings
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-key me-2"></i>API Keys</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
-    
-    <main>
+
+    <!-- Main Content -->
+    <main class="container-fluid py-4">
         {% block content %}{% endblock %}
     </main>
-    
-    <footer class="mt-5 py-3 text-center text-muted">
-        <div class="container">
-            <p class="small mb-0">
-                MirrorBot learns from interactions. Each personality mode learns separately.
-            </p>
-        </div>
-    </footer>
-    
-    <!-- Bootstrap JavaScript Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     {% block scripts %}{% endblock %}
 </body>

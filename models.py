@@ -1,158 +1,149 @@
-from datetime import datetime
-import json
 from app import db
+from datetime import datetime
+from sqlalchemy import JSON
+import json
 
-class Message(db.Model):
-    """Model to store chat messages"""
+class Lead(db.Model):
+    """Model to store scraped leads"""
     id = db.Column(db.Integer, primary_key=True)
-    conversation_id = db.Column(db.String(36), nullable=False, index=True)
-    sender = db.Column(db.String(20), nullable=False)  # 'user' or 'bot'
-    content = db.Column(db.Text, nullable=False)
-    mode = db.Column(db.String(20), nullable=False)  # Bot mode used
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    company_name = db.Column(db.String(255), nullable=False, index=True)
+    contact_name = db.Column(db.String(255), nullable=True)
+    email = db.Column(db.String(255), nullable=True, index=True)
+    phone = db.Column(db.String(50), nullable=True)
+    website = db.Column(db.String(500), nullable=True)
+    industry = db.Column(db.String(100), nullable=True, index=True)
+    company_size = db.Column(db.String(50), nullable=True)  # Small, Medium, Large, Enterprise
+    location = db.Column(db.String(255), nullable=True)
+    country = db.Column(db.String(100), nullable=True)
+    
+    # Lead scoring and quality
+    quality_score = db.Column(db.Integer, default=0)  # 0-100 scale
+    lead_status = db.Column(db.String(50), default='new')  # new, contacted, qualified, converted, rejected
+    source = db.Column(db.String(100), nullable=True)  # where the lead was scraped from
+    
+    # Additional data
+    description = db.Column(db.Text, nullable=True)
+    social_media = db.Column(db.Text, nullable=True)  # JSON string for social links
+    revenue_estimate = db.Column(db.String(50), nullable=True)
+    employee_count = db.Column(db.Integer, nullable=True)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_contacted = db.Column(db.DateTime, nullable=True)
+    
+    # Tags and notes
+    tags = db.Column(db.Text, default='[]')  # JSON array of tags
+    notes = db.Column(db.Text, nullable=True)
     
     def __repr__(self):
-        return f'<Message {self.id}: {self.sender}>'
+        return f'<Lead {self.company_name}>'
+    
+    def get_tags(self):
+        """Return tags as a list"""
+        try:
+            return json.loads(self.tags) if self.tags else []
+        except:
+            return []
+    
+    def set_tags(self, tags_list):
+        """Set tags from a list"""
+        self.tags = json.dumps(tags_list)
+    
+    def get_social_media(self):
+        """Return social media links as a dictionary"""
+        try:
+            return json.loads(self.social_media) if self.social_media else {}
+        except:
+            return {}
+    
+    def set_social_media(self, social_dict):
+        """Set social media from a dictionary"""
+        self.social_media = json.dumps(social_dict)
 
-class BotVocabulary(db.Model):
-    """Model to track words the bot has learned"""
+class ScrapingSession(db.Model):
+    """Model to track scraping sessions"""
     id = db.Column(db.Integer, primary_key=True)
-    conversation_id = db.Column(db.String(36), nullable=False, index=True)
-    word = db.Column(db.String(100), nullable=False)
-    frequency = db.Column(db.Integer, default=1)
-    mode = db.Column(db.String(20), nullable=False)  # Bot mode used
-    first_seen = db.Column(db.DateTime, default=datetime.utcnow)
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    session_name = db.Column(db.String(255), nullable=False)
+    target_industry = db.Column(db.String(100), nullable=True)
+    target_location = db.Column(db.String(255), nullable=True)
+    source_platform = db.Column(db.String(100), nullable=False)  # LinkedIn, Google, etc.
     
-    # Add parts of speech for advanced learning
-    pos_tag = db.Column(db.String(10), nullable=True)  # Part of speech tag (NOUN, VERB, etc.)
+    # Session stats
+    leads_found = db.Column(db.Integer, default=0)
+    leads_processed = db.Column(db.Integer, default=0)
+    success_rate = db.Column(db.Float, default=0.0)
     
-    __table_args__ = (
-        db.UniqueConstraint('conversation_id', 'word', 'mode', name='uix_vocab_conv_word_mode'),
-    )
+    # Status and timing
+    status = db.Column(db.String(50), default='pending')  # pending, running, completed, failed
+    started_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    
+    # Configuration
+    search_criteria = db.Column(db.Text, nullable=True)  # JSON string with search parameters
     
     def __repr__(self):
-        return f'<BotVocabulary {self.word}: {self.frequency}>'
-
-class SpeechPattern(db.Model):
-    """Model to track speech patterns for advanced learning"""
-    id = db.Column(db.Integer, primary_key=True)
-    conversation_id = db.Column(db.String(36), nullable=False, index=True)
-    pattern_type = db.Column(db.String(20), nullable=False)  # 'ngram', 'pos_sequence', 'phrase'
-    pattern = db.Column(db.Text, nullable=False)  # Changed from String(255) to Text for long patterns
-    frequency = db.Column(db.Integer, default=1)
-    mode = db.Column(db.String(20), nullable=False)  # Bot mode used
-    example = db.Column(db.Text, nullable=True)  # Example text containing this pattern
-    first_seen = db.Column(db.DateTime, default=datetime.utcnow)
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+        return f'<ScrapingSession {self.session_name}>'
     
-    __table_args__ = (
-        db.UniqueConstraint('conversation_id', 'pattern', 'mode', name='uix_pattern_conv_pattern_mode'),
-    )
+    def get_search_criteria(self):
+        """Return search criteria as a dictionary"""
+        try:
+            return json.loads(self.search_criteria) if self.search_criteria else {}
+        except:
+            return {}
     
-    def __repr__(self):
-        return f'<SpeechPattern {self.pattern_type}: {self.pattern}>'
+    def set_search_criteria(self, criteria_dict):
+        """Set search criteria from a dictionary"""
+        self.search_criteria = json.dumps(criteria_dict)
 
-class PhraseTemplate(db.Model):
-    """Model to store sentence templates for mimicking speech patterns"""
+class LeadInteraction(db.Model):
+    """Model to track interactions with leads"""
     id = db.Column(db.Integer, primary_key=True)
-    conversation_id = db.Column(db.String(36), nullable=False, index=True)
-    template = db.Column(db.Text, nullable=False)  # Template with POS placeholders
-    pos_structure = db.Column(db.Text, nullable=False)  # POS sequence as JSON
-    frequency = db.Column(db.Integer, default=1)
-    mode = db.Column(db.String(20), nullable=False)  # Bot mode used
-    example = db.Column(db.Text, nullable=True)  # Original sentence this template was derived from
-    first_seen = db.Column(db.DateTime, default=datetime.utcnow)
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    lead_id = db.Column(db.Integer, db.ForeignKey('lead.id'), nullable=False)
+    interaction_type = db.Column(db.String(50), nullable=False)  # email, call, meeting, note
+    subject = db.Column(db.String(255), nullable=True)
+    content = db.Column(db.Text, nullable=True)
+    outcome = db.Column(db.String(100), nullable=True)  # positive, negative, neutral, follow_up
+    
+    # Timing
+    interaction_date = db.Column(db.DateTime, default=datetime.utcnow)
+    follow_up_date = db.Column(db.DateTime, nullable=True)
+    
+    # Relationship
+    lead = db.relationship('Lead', backref=db.backref('interactions', lazy=True))
     
     def __repr__(self):
-        return f'<PhraseTemplate {self.id}: {self.template[:30]}...>'
+        return f'<LeadInteraction {self.interaction_type} for Lead {self.lead_id}>'
 
-class MemoryFact(db.Model):
-    """Model to store specific facts about the user learned from conversations"""
+class LeadList(db.Model):
+    """Model for organizing leads into lists/campaigns"""
     id = db.Column(db.Integer, primary_key=True)
-    conversation_id = db.Column(db.String(36), nullable=False, index=True)
-    subject = db.Column(db.String(100), nullable=False)  # What the fact is about (e.g., "name", "occupation", "birthday")
-    fact = db.Column(db.Text, nullable=False)  # The actual fact content
-    confidence = db.Column(db.Float, default=1.0)  # How confident the bot is about this fact (0-1)
-    source_message_id = db.Column(db.Integer, db.ForeignKey('message.id'), nullable=True)  # Message where fact was learned
-    source_text = db.Column(db.Text, nullable=True)  # Portion of the text containing the fact
-    fact_metadata = db.Column(db.Text, nullable=True)  # JSON string for additional metadata
+    name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    list_type = db.Column(db.String(50), default='general')  # general, campaign, target_industry
+    
+    # Stats
+    total_leads = db.Column(db.Integer, default=0)
+    contacted_leads = db.Column(db.Integer, default=0)
+    converted_leads = db.Column(db.Integer, default=0)
+    
+    # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    mentioned_count = db.Column(db.Integer, default=1)  # How many times this fact has been mentioned
-    priority = db.Column(db.Integer, default=5)  # Importance (1-10, with 10 being highest)
-    
-    # The context in which to use this fact (greeting, personal, preferences, etc.)
-    context_tags = db.Column(db.Text, default='["general"]')  # JSON list of contexts
-    
-    __table_args__ = (
-        db.UniqueConstraint('conversation_id', 'subject', name='uix_memory_fact_conv_subject'),
-    )
     
     def __repr__(self):
-        return f'<MemoryFact {self.subject}: {self.fact[:30]}...>'
-    
-    def get_context_tags(self):
-        """Return context tags as a list"""
-        if not self.context_tags:
-            return ['general']
-        try:
-            return json.loads(self.context_tags)
-        except:
-            return ['general']
-    
-    def set_context_tags(self, tags_list):
-        """Set context tags from a list"""
-        if not tags_list:
-            self.context_tags = json.dumps(['general'])
-        else:
-            self.context_tags = json.dumps(tags_list)
-    
-    def get_metadata(self):
-        """Return metadata as a dictionary"""
-        if not self.fact_metadata:
-            return {}
-        try:
-            return json.loads(self.fact_metadata)
-        except:
-            return {}
-    
-    def set_metadata(self, metadata_dict):
-        """Set metadata from a dictionary"""
-        if not metadata_dict:
-            self.fact_metadata = None
-        else:
-            self.fact_metadata = json.dumps(metadata_dict)
+        return f'<LeadList {self.name}>'
 
-class EmotionTracker(db.Model):
-    """Model to track user emotions over time"""
+class LeadListMembership(db.Model):
+    """Many-to-many relationship between leads and lists"""
     id = db.Column(db.Integer, primary_key=True)
-    conversation_id = db.Column(db.String(36), nullable=False, index=True)
-    message_id = db.Column(db.Integer, db.ForeignKey('message.id'), nullable=True)
-    primary_emotion = db.Column(db.String(20), nullable=False)  # happy, sad, angry, afraid, surprised, neutral
-    confidence = db.Column(db.Float, default=0.5)  # Confidence in the emotion detection (0-1)
-    intensity = db.Column(db.Float, default=0.5)  # Intensity of the emotion (0-1)
-    emotion_data = db.Column(db.Text, nullable=True)  # JSON string with detailed emotion scores
-    text_sample = db.Column(db.Text, nullable=True)  # Sample of the text that triggered this emotion
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    mode = db.Column(db.String(20), nullable=False)  # Bot mode used when this emotion was detected
+    lead_id = db.Column(db.Integer, db.ForeignKey('lead.id'), nullable=False)
+    list_id = db.Column(db.Integer, db.ForeignKey('lead_list.id'), nullable=False)
+    added_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    lead = db.relationship('Lead', backref=db.backref('list_memberships', lazy=True))
+    lead_list = db.relationship('LeadList', backref=db.backref('memberships', lazy=True))
     
     def __repr__(self):
-        return f'<EmotionTracker {self.primary_emotion}: {self.confidence:.2f}>'
-    
-    def get_emotion_data(self):
-        """Return emotion data as a dictionary"""
-        if not self.emotion_data:
-            return {}
-        try:
-            return json.loads(self.emotion_data)
-        except:
-            return {}
-    
-    def set_emotion_data(self, emotion_dict):
-        """Set emotion data from a dictionary"""
-        if not emotion_dict:
-            self.emotion_data = None
-        else:
-            self.emotion_data = json.dumps(emotion_dict)
+        return f'<LeadListMembership Lead {self.lead_id} in List {self.list_id}>'

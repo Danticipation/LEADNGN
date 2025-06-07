@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+
+{% block title %}Leads - LeadNGN{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="text-light mb-0">
+            <i class="fas fa-users text-primary me-2"></i>
+            Lead Management
+        </h1>
+        <p class="text-muted">Manage and track your leads with advanced filtering and sorting</p>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-dark border-secondary">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Search</label>
+                        <input type="text" class="form-control" name="search" 
+                               value="{{ current_filters.search }}" 
+                               placeholder="Search company, contact, or email...">
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">Industry</label>
+                        <select class="form-select" name="industry">
+                            <option value="">All Industries</option>
+                            {% for industry in industries %}
+                            <option value="{{ industry }}" {% if current_filters.industry == industry %}selected{% endif %}>
+                                {{ industry }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="new" {% if current_filters.status == 'new' %}selected{% endif %}>New</option>
+                            <option value="contacted" {% if current_filters.status == 'contacted' %}selected{% endif %}>Contacted</option>
+                            <option value="qualified" {% if current_filters.status == 'qualified' %}selected{% endif %}>Qualified</option>
+                            <option value="converted" {% if current_filters.status == 'converted' %}selected{% endif %}>Converted</option>
+                            <option value="rejected" {% if current_filters.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">Quality</label>
+                        <select class="form-select" name="quality">
+                            <option value="">All Quality</option>
+                            <option value="high" {% if current_filters.quality == 'high' %}selected{% endif %}>High (80+)</option>
+                            <option value="medium" {% if current_filters.quality == 'medium' %}selected{% endif %}>Medium (40-79)</option>
+                            <option value="low" {% if current_filters.quality == 'low' %}selected{% endif %}>Low (<40)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-1"></i>Search
+                        </button>
+                        <a href="/leads" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leads Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    {% if leads.total %}
+                    Leads ({{ leads.total }} total)
+                    {% else %}
+                    Leads
+                    {% endif %}
+                </h5>
+                <div>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-outline-info btn-sm" onclick="exportLeads()">
+                            <i class="fas fa-download me-1"></i>Export
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="addLead()">
+                            <i class="fas fa-plus me-1"></i>Add Lead
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if leads.items %}
+                <div class="table-responsive">
+                    <table class="table table-dark lead-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <a href="{{ url_for('leads_list', sort='company_name', order='asc' if current_filters.sort == 'company_name' and current_filters.order == 'desc' else 'desc', **current_filters) }}" 
+                                       class="text-decoration-none text-light">
+                                        Company
+                                        {% if current_filters.sort == 'company_name' %}
+                                        <i class="fas fa-sort-{{ 'up' if current_filters.order == 'asc' else 'down' }} ms-1"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>Contact Info</th>
+                                <th>
+                                    <a href="{{ url_for('leads_list', sort='industry', order='asc' if current_filters.sort == 'industry' and current_filters.order == 'desc' else 'desc', **current_filters) }}" 
+                                       class="text-decoration-none text-light">
+                                        Industry
+                                        {% if current_filters.sort == 'industry' %}
+                                        <i class="fas fa-sort-{{ 'up' if current_filters.order == 'asc' else 'down' }} ms-1"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('leads_list', sort='quality_score', order='asc' if current_filters.sort == 'quality_score' and current_filters.order == 'desc' else 'desc', **current_filters) }}" 
+                                       class="text-decoration-none text-light">
+                                        Quality
+                                        {% if current_filters.sort == 'quality_score' %}
+                                        <i class="fas fa-sort-{{ 'up' if current_filters.order == 'asc' else 'down' }} ms-1"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>Status</th>
+                                <th>
+                                    <a href="{{ url_for('leads_list', sort='created_at', order='asc' if current_filters.sort == 'created_at' and current_filters.order == 'desc' else 'desc', **current_filters) }}" 
+                                       class="text-decoration-none text-light">
+                                        Date Added
+                                        {% if current_filters.sort == 'created_at' %}
+                                        <i class="fas fa-sort-{{ 'up' if current_filters.order == 'asc' else 'down' }} ms-1"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lead in leads.items %}
+                            <tr class="lead-row">
+                                <td>
+                                    <div class="fw-bold">{{ lead.company_name }}</div>
+                                    {% if lead.company_size %}
+                                    <small class="text-muted">{{ lead.company_size }}</small>
+                                    {% endif %}
+                                    {% if lead.location %}
+                                    <br><small class="text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>{{ lead.location }}
+                                    </small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if lead.contact_name %}
+                                    <div class="fw-semibold">{{ lead.contact_name }}</div>
+                                    {% endif %}
+                                    {% if lead.email %}
+                                    <div>
+                                        <i class="fas fa-envelope me-1 text-muted"></i>
+                                        <a href="mailto:{{ lead.email }}" class="text-info">{{ lead.email }}</a>
+                                    </div>
+                                    {% endif %}
+                                    {% if lead.phone %}
+                                    <div>
+                                        <i class="fas fa-phone me-1 text-muted"></i>
+                                        <a href="tel:{{ lead.phone }}" class="text-info">{{ lead.phone }}</a>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if lead.industry %}
+                                    <span class="industry-tag">{{ lead.industry }}</span>
+                                    {% if lead.employee_count %}
+                                    <br><small class="text-muted">{{ lead.employee_count }} employees</small>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="text-center">
+                                        {% if lead.quality_score >= 80 %}
+                                        <span class="lead-score-high">{{ lead.quality_score }}</span>
+                                        {% elif lead.quality_score >= 40 %}
+                                        <span class="lead-score-medium">{{ lead.quality_score }}</span>
+                                        {% else %}
+                                        <span class="lead-score-low">{{ lead.quality_score or 0 }}</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if lead.lead_status == 'new' %}
+                                    <span class="badge bg-warning status-badge">New</span>
+                                    {% elif lead.lead_status == 'contacted' %}
+                                    <span class="badge bg-info status-badge">Contacted</span>
+                                    {% elif lead.lead_status == 'qualified' %}
+                                    <span class="badge bg-primary status-badge">Qualified</span>
+                                    {% elif lead.lead_status == 'converted' %}
+                                    <span class="badge bg-success status-badge">Converted</span>
+                                    {% elif lead.lead_status == 'rejected' %}
+                                    <span class="badge bg-danger status-badge">Rejected</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary status-badge">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ lead.created_at.strftime('%Y-%m-%d %H:%M') if lead.created_at else '-' }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="/lead/{{ lead.id }}" class="btn btn-outline-primary btn-sm" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="editLead({{ lead.id }})" title="Edit Lead">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-info btn-sm" onclick="contactLead({{ lead.id }})" title="Contact Lead">
+                                            <i class="fas fa-envelope"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if leads.pages > 1 %}
+                <nav aria-label="Leads pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if leads.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('leads_list', page=leads.prev_num, **current_filters) }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page_num in leads.iter_pages() %}
+                        {% if page_num %}
+                        {% if page_num != leads.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('leads_list', page=page_num, **current_filters) }}">{{ page_num }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if leads.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('leads_list', page=leads.next_num, **current_filters) }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No leads found</h5>
+                    <p class="text-muted">Try adjusting your search criteria or add new leads.</p>
+                    <button class="btn btn-primary" onclick="addLead()">
+                        <i class="fas fa-plus me-2"></i>Add Lead
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editLead(leadId) {
+    // Redirect to lead detail page for editing
+    window.location.href = `/lead/${leadId}`;
+}
+
+function contactLead(leadId) {
+    // Placeholder for contact functionality
+    alert('Contact functionality coming soon!');
+}
+
+function addLead() {
+    // Placeholder for add lead functionality
+    alert('Add lead functionality coming soon!');
+}
+
+function exportLeads() {
+    // Placeholder for export functionality
+    alert('Export functionality coming soon!');
+}
+</script>
+{% endblock %}

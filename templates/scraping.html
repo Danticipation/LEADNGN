@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+
+{% block title %}Scraping - LeadNGN{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="text-light mb-0">
+            <i class="fas fa-spider text-primary me-2"></i>
+            Lead Scraping Engine
+        </h1>
+        <p class="text-muted">Configure and manage automated lead collection from various sources</p>
+    </div>
+</div>
+
+<!-- Quick Start Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-rocket me-2"></i>Start New Scraping Session
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="scrapingForm" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Session Name</label>
+                        <input type="text" class="form-control" name="session_name" required 
+                               placeholder="e.g., Tech Companies Q1 2024">
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">Source Platform</label>
+                        <select class="form-select" name="platform" required>
+                            <option value="">Select Platform</option>
+                            <option value="linkedin">LinkedIn</option>
+                            <option value="crunchbase">Crunchbase</option>
+                            <option value="angellist">AngelList</option>
+                            <option value="google">Google Search</option>
+                            <option value="yellowpages">Yellow Pages</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">Target Industry</label>
+                        <input type="text" class="form-control" name="industry" 
+                               placeholder="e.g., Software Development">
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">Target Location</label>
+                        <input type="text" class="form-control" name="location" 
+                               placeholder="e.g., San Francisco, CA">
+                    </div>
+                    
+                    <div class="col-12">
+                        <label class="form-label">Search Keywords</label>
+                        <textarea class="form-control" name="keywords" rows="2" 
+                                  placeholder="Enter specific keywords or search terms to target..."></textarea>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Company Size</label>
+                        <div class="form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="company_size" value="startup" id="startup">
+                            <label class="form-check-label" for="startup">Startup</label>
+                        </div>
+                        <div class="form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="company_size" value="small" id="small">
+                            <label class="form-check-label" for="small">Small</label>
+                        </div>
+                        <div class="form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="company_size" value="medium" id="medium">
+                            <label class="form-check-label" for="medium">Medium</label>
+                        </div>
+                        <div class="form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="company_size" value="large" id="large">
+                            <label class="form-check-label" for="large">Large</label>
+                        </div>
+                        <div class="form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="company_size" value="enterprise" id="enterprise">
+                            <label class="form-check-label" for="enterprise">Enterprise</label>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Max Results</label>
+                        <select class="form-select" name="max_results">
+                            <option value="50">50 leads</option>
+                            <option value="100" selected>100 leads</option>
+                            <option value="250">250 leads</option>
+                            <option value="500">500 leads</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success me-2">
+                            <i class="fas fa-play me-1"></i>Start Scraping
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                            <i class="fas fa-redo me-1"></i>Reset
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scraping Sessions History -->
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Scraping Sessions
+                </h5>
+                <div>
+                    <button class="btn btn-outline-info btn-sm" onclick="refreshSessions()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if sessions %}
+                <div class="table-responsive">
+                    <table class="table table-dark">
+                        <thead>
+                            <tr>
+                                <th>Session Name</th>
+                                <th>Platform</th>
+                                <th>Target</th>
+                                <th>Results</th>
+                                <th>Success Rate</th>
+                                <th>Status</th>
+                                <th>Started</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in sessions %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">{{ session.session_name }}</div>
+                                </td>
+                                <td>
+                                    {% if session.source_platform == 'linkedin' %}
+                                    <i class="fab fa-linkedin text-info me-1"></i>LinkedIn
+                                    {% elif session.source_platform == 'crunchbase' %}
+                                    <i class="fas fa-building text-warning me-1"></i>Crunchbase
+                                    {% elif session.source_platform == 'angellist' %}
+                                    <i class="fas fa-angel text-primary me-1"></i>AngelList
+                                    {% elif session.source_platform == 'google' %}
+                                    <i class="fab fa-google text-danger me-1"></i>Google
+                                    {% else %}
+                                    <i class="fas fa-globe me-1"></i>{{ session.source_platform|title }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if session.target_industry %}
+                                    <div class="small">{{ session.target_industry }}</div>
+                                    {% endif %}
+                                    {% if session.target_location %}
+                                    <div class="small text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>{{ session.target_location }}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="text-center">
+                                        <span class="fw-bold">{{ session.leads_found or 0 }}</span>
+                                        {% if session.leads_processed %}
+                                        <small class="text-muted d-block">
+                                            {{ session.leads_processed }} processed
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if session.success_rate %}
+                                    <div class="text-center">
+                                        {% if session.success_rate >= 0.8 %}
+                                        <span class="text-success fw-bold">{{ "%.1f"|format(session.success_rate * 100) }}%</span>
+                                        {% elif session.success_rate >= 0.6 %}
+                                        <span class="text-warning fw-bold">{{ "%.1f"|format(session.success_rate * 100) }}%</span>
+                                        {% else %}
+                                        <span class="text-danger fw-bold">{{ "%.1f"|format(session.success_rate * 100) }}%</span>
+                                        {% endif %}
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if session.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% elif session.status == 'running' %}
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-spinner fa-spin me-1"></i>Running
+                                    </span>
+                                    {% elif session.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% elif session.status == 'failed' %}
+                                    <span class="badge bg-danger">Failed</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ session.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ session.started_at.strftime('%Y-%m-%d %H:%M') if session.started_at else '-' }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-outline-primary btn-sm" onclick="viewSession({{ session.id }})" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        {% if session.status == 'running' %}
+                                        <button class="btn btn-outline-danger btn-sm" onclick="stopSession({{ session.id }})" title="Stop Session">
+                                            <i class="fas fa-stop"></i>
+                                        </button>
+                                        {% elif session.status == 'completed' %}
+                                        <button class="btn btn-outline-success btn-sm" onclick="downloadResults({{ session.id }})" title="Download Results">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-spider fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No scraping sessions yet</h5>
+                    <p class="text-muted">Start your first lead scraping session above.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scraping Tips -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb text-warning me-2"></i>Scraping Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Use specific industry keywords for better targeting
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Start with smaller result sets to test effectiveness
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        LinkedIn provides highest quality contact information
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Combine multiple platforms for comprehensive coverage
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-bar text-info me-2"></i>Platform Comparison
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>LinkedIn</span>
+                        <span class="text-success">Best for B2B contacts</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Crunchbase</span>
+                        <span class="text-info">Startup information</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>AngelList</span>
+                        <span class="text-warning">Startup funding data</span>
+                    </div>
+                </div>
+                <div class="mb-0">
+                    <div class="d-flex justify-content-between">
+                        <span>Google Search</span>
+                        <span class="text-primary">Broad coverage</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('scrapingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Get form data
+    const formData = new FormData(this);
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Starting...';
+    submitBtn.disabled = true;
+    
+    // Simulate API call (replace with actual implementation)
+    setTimeout(() => {
+        alert('Scraping session started! This is a demo - actual scraping functionality would be implemented here.');
+        
+        // Reset button
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        
+        // Refresh the page to show new session
+        window.location.reload();
+    }, 2000);
+});
+
+function resetForm() {
+    document.getElementById('scrapingForm').reset();
+}
+
+function viewSession(sessionId) {
+    alert(`Viewing session ${sessionId} details - functionality coming soon!`);
+}
+
+function stopSession(sessionId) {
+    if (confirm('Are you sure you want to stop this scraping session?')) {
+        alert(`Stopping session ${sessionId} - functionality coming soon!`);
+    }
+}
+
+function downloadResults(sessionId) {
+    alert(`Downloading results for session ${sessionId} - functionality coming soon!`);
+}
+
+function refreshSessions() {
+    window.location.reload();
+}
+</script>
+{% endblock %}

@@ -1,7 +1,7 @@
 import os
 import logging
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -31,15 +31,15 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 # Initialize the app with the extension
 db.init_app(app)
 
-# Import models after db initialization
-from models import Lead, ScrapingSession, LeadInteraction, LeadList, LeadListMembership
-
 with app.app_context():
     try:
+        # Import models to create tables
+        from models import Lead, ScrapingSession, LeadInteraction, LeadList, LeadListMembership
         db.create_all()
         logger.info("Database tables created successfully")
     except Exception as e:
         logger.error(f"Error creating database tables: {str(e)}")
+        # Continue anyway, tables might already exist
 
 @app.route('/')
 def dashboard():
@@ -53,6 +53,7 @@ def dashboard():
         sort_order = request.args.get('order', 'desc')
         
         # Build query
+        from models import Lead
         query = Lead.query
         
         # Apply filters
@@ -113,12 +114,6 @@ def dashboard():
         logger.error(f"Error loading dashboard: {str(e)}")
         return render_template('dashboard.html', 
                              leads=[], 
-                             total_leads=0,
-                             new_leads=0,
-                             qualified_leads=0,
-                             converted_leads=0,
-                             industry_stats=[],
-                             recent_leads=0,
                              error="Error loading dashboard data")
 
 @app.route('/leads')
@@ -136,6 +131,7 @@ def leads_list():
         sort_by = request.args.get('sort', 'created_at')
         sort_order = request.args.get('order', 'desc')
         
+        from models import Lead
         query = Lead.query
         
         # Apply search
@@ -198,6 +194,7 @@ def leads_list():
 def lead_detail(lead_id):
     """Detailed view of a single lead"""
     try:
+        from models import Lead, LeadInteraction
         lead = Lead.query.get_or_404(lead_id)
         interactions = LeadInteraction.query.filter_by(lead_id=lead_id).order_by(
             desc(LeadInteraction.interaction_date)
@@ -213,6 +210,7 @@ def lead_detail(lead_id):
 def scraping_dashboard():
     """Scraping sessions management"""
     try:
+        from models import ScrapingSession
         sessions = ScrapingSession.query.order_by(desc(ScrapingSession.started_at)).limit(20).all()
         
         return render_template('scraping.html', sessions=sessions)
@@ -221,10 +219,133 @@ def scraping_dashboard():
         logger.error(f"Error loading scraping dashboard: {str(e)}")
         return render_template('scraping.html', sessions=[], error="Error loading scraping data")
 
+@app.route('/api/leads', methods=['GET'])
+def api_leads():
+    """API endpoint for leads data"""
+    try:
+        from models import Lead
+        
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = min(request.args.get('per_page', 25, type=int), 100)
+        
+        # Get filter parameters
+        industry = request.args.get('industry')
+        status = request.args.get('status')
+        quality = request.args.get('quality')
+        
+        query = Lead.query
+        
+        # Apply filters
+        if industry:
+            query = query.filter(Lead.industry.ilike(f'%{industry}%'))
+        if status:
+            query = query.filter(Lead.lead_status == status)
+        if quality:
+            if quality == 'high':
+                query = query.filter(Lead.quality_score >= 80)
+            elif quality == 'medium':
+                query = query.filter(Lead.quality_score.between(40, 79))
+            elif quality == 'low':
+                query = query.filter(Lead.quality_score < 40)
+        
+        leads = query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        return jsonify({
+            'leads': [{
+                'id': lead.id,
+                'company_name': lead.company_name,
+                'contact_name': lead.contact_name,
+                'email': lead.email,
+                'phone': lead.phone,
+                'industry': lead.industry,
+                'quality_score': lead.quality_score,
+                'lead_status': lead.lead_status,
+                'created_at': lead.created_at.isoformat() if lead.created_at else None
+            } for lead in leads.items],
+            'pagination': {
+                'page': leads.page,
+                'pages': leads.pages,
+                'per_page': leads.per_page,
+                'total': leads.total,
+                'has_next': leads.has_next,
+                'has_prev': leads.has_prev
+            }
+        })
+    
+    except Exception as e:
+        logger.error(f"Error in leads API: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/lead/<int:lead_id>/update', methods=['POST'])
+def update_lead(lead_id):
+    """Update lead information"""
+    try:
+        from models import Lead
+        lead = Lead.query.get_or_404(lead_id)
+        
+        data = request.get_json()
+        
+        # Update allowed fields
+        if 'lead_status' in data:
+            lead.lead_status = data['lead_status']
+        if 'quality_score' in data:
+            lead.quality_score = max(0, min(100, int(data['quality_score'])))
+        if 'notes' in data:
+            lead.notes = data['notes']
+        if 'tags' in data:
+            lead.set_tags(data['tags'])
+        
+        lead.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Lead updated successfully'})
+    
+    except Exception as e:
+        logger.error(f"Error updating lead {lead_id}: {str(e)}")
+        return jsonify({'error': 'Failed to update lead'}), 500
+
+@app.route('/api/lead/<int:lead_id>/interaction', methods=['POST'])
+def add_interaction(lead_id):
+    """Add interaction to a lead"""
+    try:
+        from models import Lead, LeadInteraction
+        lead = Lead.query.get_or_404(lead_id)
+        
+        data = request.get_json()
+        
+        interaction = LeadInteraction()
+        interaction.lead_id = lead_id
+        interaction.interaction_type = data.get('type', 'note')
+        interaction.subject = data.get('subject')
+        interaction.content = data.get('content')
+        interaction.outcome = data.get('outcome')
+        
+        if data.get('follow_up_date'):
+            interaction.follow_up_date = datetime.fromisoformat(data['follow_up_date'])
+        
+        # Update lead's last contacted date
+        lead.last_contacted = datetime.utcnow()
+        
+        db.session.add(interaction)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Interaction added successfully'})
+    
+    except Exception as e:
+        logger.error(f"Error adding interaction to lead {lead_id}: {str(e)}")
+        return jsonify({'error': 'Failed to add interaction'}), 500
+
 @app.route('/api/dashboard/stats', methods=['GET'])
 def dashboard_stats():
     """Get dashboard statistics"""
     try:
+        from models import Lead
+        
         # Basic counts
         total_leads = Lead.query.count()
         new_leads = Lead.query.filter(Lead.lead_status == 'new').count()

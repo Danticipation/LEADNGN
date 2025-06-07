@@ -1,0 +1,347 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - LeadNGN{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="text-light mb-0">
+            <i class="fas fa-tachometer-alt text-primary me-2"></i>
+            Lead Management Dashboard
+        </h1>
+        <p class="text-muted">Monitor and manage your lead generation pipeline</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="text-primary mb-0">{{ total_leads or 0 }}</h3>
+                        <p class="text-muted mb-0">Total Leads</p>
+                    </div>
+                    <i class="fas fa-users fa-2x text-primary opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="text-warning mb-0">{{ new_leads or 0 }}</h3>
+                        <p class="text-muted mb-0">New Leads</p>
+                    </div>
+                    <i class="fas fa-star fa-2x text-warning opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="text-info mb-0">{{ qualified_leads or 0 }}</h3>
+                        <p class="text-muted mb-0">Qualified</p>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x text-info opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="text-success mb-0">{{ converted_leads or 0 }}</h3>
+                        <p class="text-muted mb-0">Converted</p>
+                    </div>
+                    <i class="fas fa-trophy fa-2x text-success opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>Filter & Sort Leads
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Industry</label>
+                        <input type="text" class="form-control" name="industry" 
+                               value="{{ current_filters.industry }}" 
+                               placeholder="Filter by industry">
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="new" {% if current_filters.status == 'new' %}selected{% endif %}>New</option>
+                            <option value="contacted" {% if current_filters.status == 'contacted' %}selected{% endif %}>Contacted</option>
+                            <option value="qualified" {% if current_filters.status == 'qualified' %}selected{% endif %}>Qualified</option>
+                            <option value="converted" {% if current_filters.status == 'converted' %}selected{% endif %}>Converted</option>
+                            <option value="rejected" {% if current_filters.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">Quality</label>
+                        <select class="form-select" name="quality">
+                            <option value="">All Quality</option>
+                            <option value="high" {% if current_filters.quality == 'high' %}selected{% endif %}>High (80+)</option>
+                            <option value="medium" {% if current_filters.quality == 'medium' %}selected{% endif %}>Medium (40-79)</option>
+                            <option value="low" {% if current_filters.quality == 'low' %}selected{% endif %}>Low (<40)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">Sort By</label>
+                        <select class="form-select" name="sort">
+                            <option value="created_at" {% if current_filters.sort == 'created_at' %}selected{% endif %}>Date Added</option>
+                            <option value="quality_score" {% if current_filters.sort == 'quality_score' %}selected{% endif %}>Quality Score</option>
+                            <option value="company_name" {% if current_filters.sort == 'company_name' %}selected{% endif %}>Company Name</option>
+                            <option value="industry" {% if current_filters.sort == 'industry' %}selected{% endif %}>Industry</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-1">
+                        <label class="form-label">Order</label>
+                        <select class="form-select" name="order">
+                            <option value="desc" {% if current_filters.order == 'desc' %}selected{% endif %}>Desc</option>
+                            <option value="asc" {% if current_filters.order == 'asc' %}selected{% endif %}>Asc</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-filter me-1"></i>Apply
+                        </button>
+                        <a href="/" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Leads Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Recent Leads
+                </h5>
+                <div>
+                    <a href="/leads" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-external-link-alt me-1"></i>View All
+                    </a>
+                    <button class="btn btn-success btn-sm" onclick="startScraping()">
+                        <i class="fas fa-plus me-1"></i>Add Lead
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if leads %}
+                <div class="table-responsive">
+                    <table class="table table-dark lead-table">
+                        <thead>
+                            <tr>
+                                <th>Company</th>
+                                <th>Contact</th>
+                                <th>Industry</th>
+                                <th>Quality Score</th>
+                                <th>Status</th>
+                                <th>Date Added</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lead in leads %}
+                            <tr class="lead-row">
+                                <td>
+                                    <div class="fw-bold">{{ lead.company_name }}</div>
+                                    {% if lead.website %}
+                                    <small class="text-muted">
+                                        <i class="fas fa-globe me-1"></i>
+                                        <a href="{{ lead.website }}" target="_blank" class="text-info">Website</a>
+                                    </small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if lead.contact_name %}
+                                    <div>{{ lead.contact_name }}</div>
+                                    {% endif %}
+                                    {% if lead.email %}
+                                    <small class="text-muted">
+                                        <i class="fas fa-envelope me-1"></i>{{ lead.email }}
+                                    </small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if lead.industry %}
+                                    <span class="industry-tag">{{ lead.industry }}</span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if lead.quality_score >= 80 %}
+                                    <span class="lead-score-high">{{ lead.quality_score }}</span>
+                                    {% elif lead.quality_score >= 40 %}
+                                    <span class="lead-score-medium">{{ lead.quality_score }}</span>
+                                    {% else %}
+                                    <span class="lead-score-low">{{ lead.quality_score or 0 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if lead.lead_status == 'new' %}
+                                    <span class="badge bg-warning status-badge">New</span>
+                                    {% elif lead.lead_status == 'contacted' %}
+                                    <span class="badge bg-info status-badge">Contacted</span>
+                                    {% elif lead.lead_status == 'qualified' %}
+                                    <span class="badge bg-primary status-badge">Qualified</span>
+                                    {% elif lead.lead_status == 'converted' %}
+                                    <span class="badge bg-success status-badge">Converted</span>
+                                    {% elif lead.lead_status == 'rejected' %}
+                                    <span class="badge bg-danger status-badge">Rejected</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary status-badge">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ lead.created_at.strftime('%Y-%m-%d') if lead.created_at else '-' }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="/lead/{{ lead.id }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="editLead({{ lead.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No leads found</h5>
+                    <p class="text-muted">Start by setting up a scraping session to collect leads.</p>
+                    <a href="/scraping" class="btn btn-primary">
+                        <i class="fas fa-spider me-2"></i>Start Scraping
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Industry Breakdown -->
+{% if industry_stats %}
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Industry Breakdown
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for industry, count in industry_stats %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>{{ industry or 'Unknown' }}</span>
+                    <span class="badge bg-primary">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Recent Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>Leads added this week</span>
+                    <span class="badge bg-success">{{ recent_leads or 0 }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>Conversion rate</span>
+                    <span class="badge bg-info">
+                        {% if total_leads and converted_leads %}
+                        {{ "%.1f"|format((converted_leads / total_leads) * 100) }}%
+                        {% else %}
+                        0.0%
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Avg. quality score</span>
+                    <span class="badge bg-warning">
+                        {% if leads %}
+                        {{ "%.0f"|format(leads|sum(attribute='quality_score')/leads|length) }}
+                        {% else %}
+                        0
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editLead(leadId) {
+    // Placeholder for lead editing functionality
+    alert('Edit lead functionality coming soon!');
+}
+
+function startScraping() {
+    window.location.href = '/scraping';
+}
+
+// Auto-refresh dashboard every 30 seconds
+setInterval(function() {
+    // Only refresh if no filters are applied
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.toString() === '') {
+        location.reload();
+    }
+}, 30000);
+</script>
+{% endblock %}
