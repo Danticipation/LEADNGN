@@ -39,42 +39,72 @@
                             <small class="text-muted">Google, Directories, LinkedIn</small>
                         </div>
                     </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sessions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Scraping Sessions
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if sessions %}
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>Session Name</th>
+                                <th>Industry</th>
+                                <th>Location</th>
+                                <th>Leads Found</th>
+                                <th>Status</th>
+                                <th>Started</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in sessions %}
+                            <tr>
+                                <td>{{ session.session_name }}</td>
+                                <td>{{ session.target_industry or 'N/A' }}</td>
+                                <td>{{ session.target_location or 'Global' }}</td>
+                                <td>{{ session.leads_found or 0 }}</td>
+                                <td>
+                                    {% if session.status == 'completed' %}
+                                    <span class="badge bg-success">{{ session.status.title() }}</span>
+                                    {% elif session.status == 'running' %}
+                                    <span class="badge bg-warning">{{ session.status.title() }}</span>
+                                    {% elif session.status == 'failed' %}
+                                    <span class="badge bg-danger">{{ session.status.title() }}</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ session.status.title() }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ session.started_at.strftime('%Y-%m-%d %H:%M') if session.started_at else 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                            <label class="form-check-label" for="small">Small</label>
-                        </div>
-                        <div class="form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="company_size" value="medium" id="medium">
-                            <label class="form-check-label" for="medium">Medium</label>
-                        </div>
-                        <div class="form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="company_size" value="large" id="large">
-                            <label class="form-check-label" for="large">Large</label>
-                        </div>
-                        <div class="form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="company_size" value="enterprise" id="enterprise">
-                            <label class="form-check-label" for="enterprise">Enterprise</label>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <label class="form-label">Max Results</label>
-                        <select class="form-select" name="max_results">
-                            <option value="50">50 leads</option>
-                            <option value="100" selected>100 leads</option>
-                            <option value="250">250 leads</option>
-                            <option value="500">500 leads</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-success me-2">
-                            <i class="fas fa-play me-1"></i>Start Scraping
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
-                            <i class="fas fa-redo me-1"></i>Reset
-                        </button>
-                    </div>
-                </form>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5>No scraping sessions yet</h5>
+                    <p class="text-muted">Start your first lead scraping session to see results here.</p>
+                    <a href="/scraping/new" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Start First Session
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
             </div>
         </div>
     </div>
