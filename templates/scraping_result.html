@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Scraping Results - LeadNGN{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4><i class="fas fa-check-circle text-success me-2"></i>Scraping Session Complete</h4>
+                        <div class="text-muted">Session #{{ result.session_id }}</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-primary">{{ result.leads_found }}</h3>
+                                <p class="text-muted mb-0">New Leads Found</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-success">{{ industry }}</h3>
+                                <p class="text-muted mb-0">Industry</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-info">{{ location or 'Global' }}</h3>
+                                <p class="text-muted mb-0">Location</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <span class="badge bg-success fs-6">Completed</span>
+                                <p class="text-muted mb-0 mt-1">Status</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if result.leads_found > 0 %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-thumbs-up me-2"></i>
+                        <strong>Success!</strong> Found {{ result.leads_found }} new leads that have been added to your database.
+                        All leads have been automatically scored for quality.
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Sample of New Leads:</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Company</th>
+                                        <th>Industry</th>
+                                        <th>Quality Score</th>
+                                        <th>Contact Info</th>
+                                        <th>Source</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for lead in result.leads[:10] %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ lead.company_name }}</strong>
+                                            {% if lead.website %}
+                                            <br><small class="text-muted">{{ lead.website }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ lead.industry or 'N/A' }}</td>
+                                        <td>
+                                            {% if lead.quality_score >= 80 %}
+                                            <span class="badge bg-success">{{ lead.quality_score }}</span>
+                                            {% elif lead.quality_score >= 60 %}
+                                            <span class="badge bg-warning">{{ lead.quality_score }}</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ lead.quality_score }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if lead.email %}
+                                            <i class="fas fa-envelope text-success me-1"></i>
+                                            {% endif %}
+                                            {% if lead.phone %}
+                                            <i class="fas fa-phone text-success me-1"></i>
+                                            {% endif %}
+                                            {% if not lead.email and not lead.phone %}
+                                            <span class="text-muted">No contact info</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><small class="text-muted">{{ lead.source }}</small></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if result.leads_found > 10 %}
+                        <p class="text-muted"><small>Showing first 10 of {{ result.leads_found }} leads found.</small></p>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>No new leads found.</strong> This could be due to:
+                        <ul class="mb-0 mt-2">
+                            <li>Very specific search criteria</li>
+                            <li>All matching companies already in your database</li>
+                            <li>Limited availability of public data for this industry/location</li>
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <div>
+                            <a href="/scraping/new" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Start New Session
+                            </a>
+                            <a href="/scraping" class="btn btn-secondary">
+                                <i class="fas fa-list me-2"></i>View All Sessions
+                            </a>
+                        </div>
+                        <div>
+                            {% if result.leads_found > 0 %}
+                            <a href="/leads?industry={{ industry }}" class="btn btn-success">
+                                <i class="fas fa-eye me-2"></i>View New Leads
+                            </a>
+                            {% endif %}
+                            <a href="/" class="btn btn-outline-primary">
+                                <i class="fas fa-home me-2"></i>Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lead Quality Breakdown -->
+            {% if result.leads_found > 0 %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar me-2"></i>Lead Quality Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                {% set high_quality = result.leads|selectattr('quality_score', 'ge', 80)|list|length %}
+                                <h4 class="text-success">{{ high_quality }}</h4>
+                                <p class="text-muted">High Quality (80+)</p>
+                                <small class="text-muted">Complete contact information</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                {% set medium_quality = result.leads|selectattr('quality_score', 'ge', 60)|selectattr('quality_score', 'lt', 80)|list|length %}
+                                <h4 class="text-warning">{{ medium_quality }}</h4>
+                                <p class="text-muted">Medium Quality (60-79)</p>
+                                <small class="text-muted">Partial contact information</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                {% set low_quality = result.leads|selectattr('quality_score', 'lt', 60)|list|length %}
+                                <h4 class="text-secondary">{{ low_quality }}</h4>
+                                <p class="text-muted">Basic Quality (&lt;60)</p>
+                                <small class="text-muted">Limited contact information</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Tips for Better Results -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6><i class="fas fa-lightbulb me-2"></i>Tips for Better Results</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Industry Targeting</h6>
+                            <ul class="small">
+                                <li>Use specific industry terms (e.g., "SaaS" vs "Software")</li>
+                                <li>Try related keywords if results are limited</li>
+                                <li>Consider broader categories for more leads</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Geographic Focus</h6>
+                            <ul class="small">
+                                <li>Use city names for local targeting</li>
+                                <li>Try state/province names for broader reach</li>
+                                <li>Leave blank for global search</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

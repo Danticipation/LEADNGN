@@ -13,61 +13,33 @@
     </div>
 </div>
 
-<!-- Quick Start Section -->
+<!-- Quick Action Section -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card bg-dark border-secondary">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="fas fa-rocket me-2"></i>Start New Scraping Session
+                    <i class="fas fa-rocket me-2"></i>Lead Generation & Scraping
                 </h5>
             </div>
             <div class="card-body">
-                <form id="scrapingForm" class="row g-3">
+                <div class="row">
+                    <div class="col-md-8">
+                        <p class="mb-3">Automatically find and collect leads from multiple sources including Google Search, business directories, and LinkedIn.</p>
+                        <a href="/scraping/new" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus me-2"></i>Start New Scraping Session
+                        </a>
+                    </div>
                     <div class="col-md-4">
-                        <label class="form-label">Session Name</label>
-                        <input type="text" class="form-control" name="session_name" required 
-                               placeholder="e.g., Tech Companies Q1 2024">
-                    </div>
-                    
-                    <div class="col-md-2">
-                        <label class="form-label">Source Platform</label>
-                        <select class="form-select" name="platform" required>
-                            <option value="">Select Platform</option>
-                            <option value="linkedin">LinkedIn</option>
-                            <option value="crunchbase">Crunchbase</option>
-                            <option value="angellist">AngelList</option>
-                            <option value="google">Google Search</option>
-                            <option value="yellowpages">Yellow Pages</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-3">
-                        <label class="form-label">Target Industry</label>
-                        <input type="text" class="form-control" name="industry" 
-                               placeholder="e.g., Software Development">
-                    </div>
-                    
-                    <div class="col-md-3">
-                        <label class="form-label">Target Location</label>
-                        <input type="text" class="form-control" name="location" 
-                               placeholder="e.g., San Francisco, CA">
-                    </div>
-                    
-                    <div class="col-12">
-                        <label class="form-label">Search Keywords</label>
-                        <textarea class="form-control" name="keywords" rows="2" 
-                                  placeholder="Enter specific keywords or search terms to target..."></textarea>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <label class="form-label">Company Size</label>
-                        <div class="form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="company_size" value="startup" id="startup">
-                            <label class="form-check-label" for="startup">Startup</label>
+                        <div class="text-center">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                <i class="fas fa-search fa-2x"></i>
+                            </div>
+                            <h6>Multi-Source Scraping</h6>
+                            <small class="text-muted">Google, Directories, LinkedIn</small>
                         </div>
-                        <div class="form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="company_size" value="small" id="small">
+                    </div>
+                </div>
                             <label class="form-check-label" for="small">Small</label>
                         </div>
                         <div class="form-check-inline">

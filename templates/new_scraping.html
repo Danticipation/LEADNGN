@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}New Lead Scraping Session - LeadNGN{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-search me-2"></i>Start New Lead Scraping Session</h4>
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" id="scrapingForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="industry" class="form-label">Industry *</label>
+                                    <input type="text" class="form-control" id="industry" name="industry" 
+                                           placeholder="e.g., Software Development, Healthcare, Manufacturing" required>
+                                    <div class="form-text">The industry or business type to search for</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="location" class="form-label">Location</label>
+                                    <input type="text" class="form-control" id="location" name="location" 
+                                           placeholder="e.g., New York, California, London">
+                                    <div class="form-text">Geographic location (optional)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="company_size" class="form-label">Company Size</label>
+                                    <select class="form-select" id="company_size" name="company_size">
+                                        <option value="">Any Size</option>
+                                        <option value="startup">Startup (1-10 employees)</option>
+                                        <option value="small">Small (11-50 employees)</option>
+                                        <option value="medium">Medium (51-200 employees)</option>
+                                        <option value="large">Large (201-1000 employees)</option>
+                                        <option value="enterprise">Enterprise (1000+ employees)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="limit" class="form-label">Number of Leads</label>
+                                    <select class="form-select" id="limit" name="limit">
+                                        <option value="10">10 leads</option>
+                                        <option value="20" selected>20 leads</option>
+                                        <option value="50">50 leads</option>
+                                        <option value="100">100 leads</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Data Sources</label>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="sources" value="google" id="google" checked>
+                                        <label class="form-check-label" for="google">
+                                            <i class="fab fa-google me-2"></i>Google Search
+                                        </label>
+                                        <div class="form-text small">General web search for companies</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="sources" value="directory" id="directory">
+                                        <label class="form-check-label" for="directory">
+                                            <i class="fas fa-building me-2"></i>Business Directories
+                                        </label>
+                                        <div class="form-text small">Yellow Pages, Yelp, BBB listings</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="sources" value="linkedin" id="linkedin">
+                                        <label class="form-check-label" for="linkedin">
+                                            <i class="fab fa-linkedin me-2"></i>LinkedIn
+                                        </label>
+                                        <div class="form-text small">Professional networking platform</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>How it works:</strong> LeadNGN will search the selected sources for companies matching your criteria, 
+                            extract contact information, and automatically score lead quality based on available data.
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/scraping" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Sessions
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="startScraping">
+                                <i class="fas fa-play me-2"></i>Start Scraping
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Start Templates -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-rocket me-2"></i>Quick Start Templates</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6>Tech Startups</h6>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="fillTemplate('Software Development', 'San Francisco', 'startup')">
+                                        Use Template
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6>Healthcare Companies</h6>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="fillTemplate('Healthcare', '', 'medium')">
+                                        Use Template
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6>Manufacturing</h6>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="fillTemplate('Manufacturing', '', 'large')">
+                                        Use Template
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function fillTemplate(industry, location, size) {
+    document.getElementById('industry').value = industry;
+    document.getElementById('location').value = location;
+    document.getElementById('company_size').value = size;
+}
+
+document.getElementById('scrapingForm').addEventListener('submit', function(e) {
+    const button = document.getElementById('startScraping');
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Starting Scraping...';
+    button.disabled = true;
+});
+</script>
+{% endblock %}

@@ -221,6 +221,67 @@ def scraping_dashboard():
         logger.error(f"Error loading scraping dashboard: {str(e)}")
         return render_template('scraping.html', sessions=[], error="Error loading scraping data")
 
+@app.route('/scraping/new', methods=['GET', 'POST'])
+def new_scraping_session():
+    """Create and run new scraping session"""
+    if request.method == 'GET':
+        return render_template('new_scraping.html')
+    
+    try:
+        # Get form data
+        industry = request.form.get('industry', '').strip()
+        location = request.form.get('location', '').strip() or None
+        company_size = request.form.get('company_size', '').strip() or None
+        sources = request.form.getlist('sources')
+        limit = int(request.form.get('limit', 20))
+        
+        if not industry:
+            return render_template('new_scraping.html', 
+                                 error="Industry is required")
+        
+        if not sources:
+            sources = ['google']  # Default to Google search
+        
+        # Import scraping engine
+        from scrapers import LeadScrapingEngine
+        
+        engine = LeadScrapingEngine()
+        result = engine.scrape_leads(
+            industry=industry,
+            location=location,
+            company_size=company_size,
+            sources=sources,
+            limit=limit
+        )
+        
+        return render_template('scraping_result.html', 
+                             result=result,
+                             industry=industry,
+                             location=location)
+    
+    except Exception as e:
+        logger.error(f"Error in scraping session: {str(e)}")
+        return render_template('new_scraping.html', 
+                             error=f"Scraping failed: {str(e)}")
+
+@app.route('/api/scraping/status/<int:session_id>')
+def scraping_status(session_id):
+    """Get status of scraping session"""
+    try:
+        session = ScrapingSession.query.get_or_404(session_id)
+        return jsonify({
+            'id': session.id,
+            'status': session.status,
+            'leads_found': session.leads_found,
+            'leads_processed': session.leads_processed,
+            'success_rate': session.success_rate,
+            'started_at': session.started_at.isoformat() if session.started_at else None,
+            'completed_at': session.completed_at.isoformat() if session.completed_at else None
+        })
+    except Exception as e:
+        logger.error(f"Error getting session status: {str(e)}")
+        return jsonify({'error': 'Session not found'}), 404
+
 @app.route('/api/dashboard/stats', methods=['GET'])
 def dashboard_stats():
     """Get dashboard statistics"""
