@@ -215,7 +215,7 @@ def get_lead_insights(lead_id):
     try:
         lead = Lead.query.get_or_404(lead_id)
         
-        from rag_system import rag_system
+        from rag_system_ollama import rag_system
         insights = rag_system.generate_lead_insights(lead)
         
         return jsonify(insights)
@@ -229,9 +229,9 @@ def generate_outreach(lead_id):
     """Generate personalized outreach content for a lead"""
     try:
         lead = Lead.query.get_or_404(lead_id)
-        outreach_type = request.json.get('type', 'email')
+        outreach_type = request.json.get('type', 'email') if request.json else 'email'
         
-        from rag_system import rag_system
+        from rag_system_ollama import rag_system
         outreach_content = rag_system.generate_personalized_outreach(lead, outreach_type)
         
         return jsonify(outreach_content)
@@ -246,7 +246,7 @@ def get_lead_research(lead_id):
     try:
         lead = Lead.query.get_or_404(lead_id)
         
-        from rag_system import rag_system
+        from rag_system_ollama import rag_system
         research_data = rag_system.gather_lead_context(lead)
         
         return jsonify(research_data)
