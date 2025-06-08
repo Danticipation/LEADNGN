@@ -1,0 +1,550 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lead.company_name }} - Lead Details - LeadNGN{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/leads">Leads</a></li>
+                    <li class="breadcrumb-item active">{{ lead.company_name }}</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-building me-2"></i>{{ lead.company_name }}</h2>
+                    <p class="text-muted mb-0">{{ lead.industry }} • {{ lead.location or 'Location not specified' }}</p>
+                </div>
+                <div>
+                    {% if lead.quality_score >= 80 %}
+                    <span class="badge bg-success fs-6">High Quality Lead ({{ lead.quality_score }})</span>
+                    {% elif lead.quality_score >= 60 %}
+                    <span class="badge bg-warning fs-6">Medium Quality Lead ({{ lead.quality_score }})</span>
+                    {% else %}
+                    <span class="badge bg-secondary fs-6">Basic Lead ({{ lead.quality_score }})</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Lead Information -->
+        <div class="col-md-8">
+            <!-- Basic Information Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle me-2"></i>Lead Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Contact Details</h6>
+                            <ul class="list-unstyled">
+                                {% if lead.contact_name %}
+                                <li><strong>Contact:</strong> {{ lead.contact_name }}</li>
+                                {% endif %}
+                                {% if lead.email %}
+                                <li><strong>Email:</strong> <a href="mailto:{{ lead.email }}">{{ lead.email }}</a></li>
+                                {% endif %}
+                                {% if lead.phone %}
+                                <li><strong>Phone:</strong> <a href="tel:{{ lead.phone }}">{{ lead.phone }}</a></li>
+                                {% endif %}
+                                {% if lead.website %}
+                                <li><strong>Website:</strong> <a href="{{ lead.website }}" target="_blank">{{ lead.website }}</a></li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Business Details</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Industry:</strong> {{ lead.industry or 'Not specified' }}</li>
+                                <li><strong>Location:</strong> {{ lead.location or 'Not specified' }}</li>
+                                <li><strong>Company Size:</strong> {{ lead.company_size or 'Not specified' }}</li>
+                                <li><strong>Status:</strong> 
+                                    <span class="badge bg-primary">{{ lead.lead_status.title() }}</span>
+                                </li>
+                                <li><strong>Source:</strong> {{ lead.source or 'Unknown' }}</li>
+                                <li><strong>Added:</strong> {{ lead.created_at.strftime('%Y-%m-%d') if lead.created_at else 'Unknown' }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    {% if lead.description %}
+                    <hr>
+                    <h6>Description</h6>
+                    <p>{{ lead.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- AI Insights Card -->
+            <div class="card mb-4" id="insights-card" style="display: none;">
+                <div class="card-header">
+                    <h5><i class="fas fa-brain me-2"></i>AI Lead Intelligence</h5>
+                </div>
+                <div class="card-body" id="insights-content">
+                    <!-- Insights will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Company Research Card -->
+            <div class="card mb-4" id="research-card" style="display: none;">
+                <div class="card-header">
+                    <h5><i class="fas fa-search me-2"></i>Company Research</h5>
+                </div>
+                <div class="card-body" id="research-content">
+                    <!-- Research will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Personalized Outreach Card -->
+            <div class="card mb-4" id="outreach-card" style="display: none;">
+                <div class="card-header">
+                    <h5><i class="fas fa-envelope me-2"></i>Personalized Outreach</h5>
+                </div>
+                <div class="card-body" id="outreach-content">
+                    <!-- Outreach content will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Interactions History -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-history me-2"></i>Interaction History</h5>
+                </div>
+                <div class="card-body">
+                    {% if interactions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Subject</th>
+                                    <th>Outcome</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for interaction in interactions %}
+                                <tr>
+                                    <td>{{ interaction.interaction_date.strftime('%Y-%m-%d %H:%M') if interaction.interaction_date else 'Unknown' }}</td>
+                                    <td><span class="badge bg-info">{{ interaction.interaction_type.title() }}</span></td>
+                                    <td>{{ interaction.subject or 'No subject' }}</td>
+                                    <td>
+                                        {% if interaction.outcome %}
+                                        <span class="badge bg-{{ 'success' if interaction.outcome == 'positive' else 'warning' if interaction.outcome == 'neutral' else 'danger' }}">
+                                            {{ interaction.outcome.title() }}
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">No outcome recorded</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                        <h6>No interactions yet</h6>
+                        <p class="text-muted">Start by adding your first interaction with this lead.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Sidebar -->
+        <div class="col-md-4">
+            <!-- AI Actions -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5><i class="fas fa-robot me-2"></i>AI-Powered Actions</h5>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary w-100 mb-2" onclick="generateInsights({{ lead.id }})">
+                        <i class="fas fa-lightbulb me-2"></i>Generate Lead Insights
+                    </button>
+                    
+                    <button class="btn btn-success w-100 mb-2" onclick="generateOutreach({{ lead.id }}, 'email')">
+                        <i class="fas fa-envelope me-2"></i>Create Email Outreach
+                    </button>
+                    
+                    <button class="btn btn-info w-100 mb-2" onclick="getLeadResearch({{ lead.id }})">
+                        <i class="fas fa-search me-2"></i>Company Research
+                    </button>
+                    
+                    <div id="ai-loading" class="text-center py-3" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Analyzing...</span>
+                        </div>
+                        <p class="mt-2 text-muted small">AI analyzing lead data...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    {% if lead.phone %}
+                    <a href="tel:{{ lead.phone }}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-phone me-2"></i>Call {{ lead.phone }}
+                    </a>
+                    {% endif %}
+                    
+                    {% if lead.email %}
+                    <a href="mailto:{{ lead.email }}" class="btn btn-success w-100 mb-2">
+                        <i class="fas fa-envelope me-2"></i>Email {{ lead.email }}
+                    </a>
+                    {% endif %}
+                    
+                    {% if lead.website %}
+                    <a href="{{ lead.website }}" target="_blank" class="btn btn-info w-100 mb-2">
+                        <i class="fas fa-globe me-2"></i>Visit Website
+                    </a>
+                    {% endif %}
+                    
+                    <button class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#addInteractionModal">
+                        <i class="fas fa-plus me-2"></i>Add Interaction
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lead Quality Breakdown -->
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="fas fa-star me-2"></i>Quality Breakdown</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted">Overall Score</small>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: {{ lead.quality_score }}%">{{ lead.quality_score }}%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <small class="text-muted d-block">Contact Info</small>
+                            {% set contact_score = (25 if lead.email else 0) + (25 if lead.phone else 0) + (15 if lead.website else 0) + (10 if lead.contact_name else 0) %}
+                            <strong class="text-{{ 'success' if contact_score >= 60 else 'warning' if contact_score >= 30 else 'danger' }}">{{ contact_score }}%</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Business Info</small>
+                            {% set business_score = (20 if lead.industry else 0) + (15 if lead.location else 0) + (10 if lead.company_size else 0) %}
+                            <strong class="text-{{ 'success' if business_score >= 35 else 'warning' if business_score >= 20 else 'danger' }}">{{ business_score }}%</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Interaction Modal -->
+<div class="modal fade" id="addInteractionModal" tabindex="-1" aria-labelledby="addInteractionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addInteractionModalLabel">Add New Interaction</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="interactionForm">
+                    <div class="mb-3">
+                        <label for="interactionType" class="form-label">Interaction Type</label>
+                        <select class="form-select" id="interactionType" required>
+                            <option value="">Select type...</option>
+                            <option value="email">Email</option>
+                            <option value="call">Phone Call</option>
+                            <option value="meeting">Meeting</option>
+                            <option value="note">Note</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="interactionSubject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="interactionSubject" placeholder="Brief description of interaction">
+                    </div>
+                    <div class="mb-3">
+                        <label for="interactionContent" class="form-label">Content</label>
+                        <textarea class="form-control" id="interactionContent" rows="3" placeholder="Detailed notes about the interaction..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="interactionOutcome" class="form-label">Outcome</label>
+                        <select class="form-select" id="interactionOutcome">
+                            <option value="">Select outcome...</option>
+                            <option value="positive">Positive</option>
+                            <option value="neutral">Neutral</option>
+                            <option value="negative">Negative</option>
+                            <option value="follow_up">Follow-up Required</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveInteraction()">Save Interaction</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// AI Functions
+function generateInsights(leadId) {
+    showLoading(true);
+    
+    fetch(`/api/lead/${leadId}/insights`)
+        .then(response => response.json())
+        .then(data => {
+            showLoading(false);
+            displayInsights(data);
+        })
+        .catch(error => {
+            showLoading(false);
+            console.error('Error generating insights:', error);
+            alert('Failed to generate insights. Please ensure OpenAI API key is configured.');
+        });
+}
+
+function generateOutreach(leadId, type) {
+    showLoading(true);
+    
+    fetch(`/api/lead/${leadId}/outreach`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type: type })
+    })
+        .then(response => response.json())
+        .then(data => {
+            showLoading(false);
+            displayOutreach(data);
+        })
+        .catch(error => {
+            showLoading(false);
+            console.error('Error generating outreach:', error);
+            alert('Failed to generate outreach. Please ensure OpenAI API key is configured.');
+        });
+}
+
+function getLeadResearch(leadId) {
+    showLoading(true);
+    
+    fetch(`/api/lead/${leadId}/research`)
+        .then(response => response.json())
+        .then(data => {
+            showLoading(false);
+            displayResearch(data);
+        })
+        .catch(error => {
+            showLoading(false);
+            console.error('Error getting research:', error);
+            alert('Failed to get research data.');
+        });
+}
+
+function showLoading(show) {
+    document.getElementById('ai-loading').style.display = show ? 'block' : 'none';
+}
+
+function displayInsights(insights) {
+    if (insights.error) {
+        alert('Error: ' + insights.error);
+        return;
+    }
+    
+    const card = document.getElementById('insights-card');
+    const content = document.getElementById('insights-content');
+    
+    let html = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Lead Priority: <span class="badge bg-${insights.lead_priority === 'high' ? 'success' : insights.lead_priority === 'medium' ? 'warning' : 'secondary'}">${insights.lead_priority?.toUpperCase() || 'UNKNOWN'}</span></h6>
+                
+                <h6 class="mt-3">Key Insights:</h6>
+                <ul>
+    `;
+    
+    if (insights.key_insights) {
+        insights.key_insights.forEach(insight => {
+            html += `<li>${insight}</li>`;
+        });
+    }
+    
+    html += `
+                </ul>
+                
+                <h6>Pain Points:</h6>
+                <ul>
+    `;
+    
+    if (insights.pain_points) {
+        insights.pain_points.forEach(pain => {
+            html += `<li>${pain}</li>`;
+        });
+    }
+    
+    html += `
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Outreach Recommendations:</h6>
+                <ul>
+    `;
+    
+    if (insights.outreach_recommendations) {
+        insights.outreach_recommendations.forEach(rec => {
+            html += `<li>${rec}</li>`;
+        });
+    }
+    
+    html += `
+                </ul>
+                
+                <h6>Best Contact Method:</h6>
+                <p><span class="badge bg-info">${insights.best_contact_method?.toUpperCase() || 'UNKNOWN'}</span></p>
+                
+                <h6>Optimal Timing:</h6>
+                <p>${insights.optimal_timing || 'Not specified'}</p>
+                
+                <h6>Next Steps:</h6>
+                <ol>
+    `;
+    
+    if (insights.next_steps) {
+        insights.next_steps.forEach(step => {
+            html += `<li>${step}</li>`;
+        });
+    }
+    
+    html += `
+                </ol>
+            </div>
+        </div>
+    `;
+    
+    content.innerHTML = html;
+    card.style.display = 'block';
+    card.scrollIntoView({ behavior: 'smooth' });
+}
+
+function displayOutreach(outreach) {
+    if (outreach.error) {
+        alert('Error: ' + outreach.error);
+        return;
+    }
+    
+    const card = document.getElementById('outreach-card');
+    const content = document.getElementById('outreach-content');
+    
+    let html = `
+        <div class="mb-3">
+            <h6>Subject Line:</h6>
+            <div class="form-control" readonly>${outreach.subject || 'No subject provided'}</div>
+        </div>
+        
+        <div class="mb-3">
+            <h6>Email Content:</h6>
+            <textarea class="form-control" rows="10" readonly>${outreach.full_message || 'No content provided'}</textarea>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" onclick="copyToClipboard('${(outreach.full_message || '').replace(/'/g, "\\'")}')">
+                <i class="fas fa-copy me-2"></i>Copy Content
+            </button>
+            <button class="btn btn-success" onclick="openEmailClient('${outreach.subject || ''}', '${(outreach.full_message || '').replace(/'/g, "\\'")}')">
+                <i class="fas fa-envelope me-2"></i>Open in Email
+            </button>
+        </div>
+    `;
+    
+    content.innerHTML = html;
+    card.style.display = 'block';
+    card.scrollIntoView({ behavior: 'smooth' });
+}
+
+function displayResearch(research) {
+    const card = document.getElementById('research-card');
+    const content = document.getElementById('research-content');
+    
+    let html = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Basic Information:</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Company:</strong> ${research.basic_info?.company_name || 'Unknown'}</li>
+                    <li><strong>Industry:</strong> ${research.basic_info?.industry || 'Unknown'}</li>
+                    <li><strong>Location:</strong> ${research.basic_info?.location || 'Unknown'}</li>
+                    <li><strong>Quality Score:</strong> ${research.basic_info?.quality_score || 0}/100</li>
+                </ul>
+                
+                <h6>Web Presence Analysis:</h6>
+                <ul class="list-unstyled">
+                    <li><strong>SSL Enabled:</strong> ${research.web_presence?.ssl_enabled ? '✅ Yes' : '❌ No'}</li>
+                    <li><strong>Mobile Friendly:</strong> ${research.web_presence?.mobile_friendly ? '✅ Yes' : '❌ No'}</li>
+                    <li><strong>Contact Accessibility:</strong> ${research.web_presence?.contact_accessibility || 0}/10</li>
+                    <li><strong>Content Quality:</strong> ${research.web_presence?.content_quality || 0}/10</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Industry Insights:</h6>
+    `;
+    
+    if (research.industry_insights?.common_pain_points?.length) {
+        html += '<p><strong>Common Pain Points:</strong></p><ul>';
+        research.industry_insights.common_pain_points.forEach(pain => {
+            html += `<li>${pain}</li>`;
+        });
+        html += '</ul>';
+    }
+    
+    if (research.industry_insights?.technology_adoption?.length) {
+        html += '<p><strong>Technology Trends:</strong></p><ul>';
+        research.industry_insights.technology_adoption.forEach(tech => {
+            html += `<li>${tech}</li>`;
+        });
+        html += '</ul>';
+    }
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    content.innerHTML = html;
+    card.style.display = 'block';
+    card.scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Content copied to clipboard!');
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
+}
+
+function openEmailClient(subject, body) {
+    const email = '{{ lead.email }}';
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoLink);
+}
+
+function saveInteraction() {
+    // This would integrate with the backend to save the interaction
+    alert('Interaction saving functionality would be implemented here');
+    bootstrap.Modal.getInstance(document.getElementById('addInteractionModal')).hide();
+}
+</script>
+{% endblock %}

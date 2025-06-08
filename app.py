@@ -203,11 +203,57 @@ def lead_detail(lead_id):
             desc(LeadInteraction.interaction_date)
         ).all()
         
-        return render_template('lead_detail.html', lead=lead, interactions=interactions)
+        return render_template('lead_detail_enhanced.html', lead=lead, interactions=interactions)
     
     except Exception as e:
         logger.error(f"Error loading lead {lead_id}: {str(e)}")
         return "Lead not found", 404
+
+@app.route('/api/lead/<int:lead_id>/insights', methods=['GET'])
+def get_lead_insights(lead_id):
+    """Get AI-powered insights for a specific lead"""
+    try:
+        lead = Lead.query.get_or_404(lead_id)
+        
+        from rag_system import rag_system
+        insights = rag_system.generate_lead_insights(lead)
+        
+        return jsonify(insights)
+    
+    except Exception as e:
+        logger.error(f"Error generating insights for lead {lead_id}: {str(e)}")
+        return jsonify({'error': 'Failed to generate insights'}), 500
+
+@app.route('/api/lead/<int:lead_id>/outreach', methods=['POST'])
+def generate_outreach(lead_id):
+    """Generate personalized outreach content for a lead"""
+    try:
+        lead = Lead.query.get_or_404(lead_id)
+        outreach_type = request.json.get('type', 'email')
+        
+        from rag_system import rag_system
+        outreach_content = rag_system.generate_personalized_outreach(lead, outreach_type)
+        
+        return jsonify(outreach_content)
+    
+    except Exception as e:
+        logger.error(f"Error generating outreach for lead {lead_id}: {str(e)}")
+        return jsonify({'error': 'Failed to generate outreach'}), 500
+
+@app.route('/api/lead/<int:lead_id>/research', methods=['GET'])
+def get_lead_research(lead_id):
+    """Get comprehensive research data for a lead"""
+    try:
+        lead = Lead.query.get_or_404(lead_id)
+        
+        from rag_system import rag_system
+        research_data = rag_system.gather_lead_context(lead)
+        
+        return jsonify(research_data)
+    
+    except Exception as e:
+        logger.error(f"Error getting research for lead {lead_id}: {str(e)}")
+        return jsonify({'error': 'Failed to get research data'}), 500
 
 @app.route('/scraping')
 def scraping_dashboard():
