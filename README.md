@@ -10,10 +10,17 @@ LeadNGN is an advanced lead generation and management platform that combines aut
 ## 🚀 Key Features
 
 ### AI-Powered Lead Intelligence
-- **Advanced Business Analysis**: GPT-4o powered insights identifying pain points, opportunities, and market positioning
+- **Dual AI Provider Support**: Switch between OpenAI GPT-4o and local Ollama models (cost-free operation)
+- **Advanced Business Analysis**: Industry-specific insights, pain points, and market positioning
 - **Personalized Outreach Generation**: Context-aware email creation with industry-specific messaging
 - **Smart Lead Scoring**: 0-100 quality assessment with confidence metrics
 - **Industry Intelligence**: Specialized knowledge for HVAC, Dental, Legal, and other high-value sectors
+
+### Strategic Lead Management Features
+- **Auto-Revalidation Workflows**: Automated data freshness maintenance with quality-based scheduling
+- **Email Deliverability Intelligence**: Comprehensive validation, MX verification, and spam prevention
+- **Phone & Voice Intelligence**: Industry-specific prioritization and Twilio integration
+- **Multi-Channel Orchestration**: Optimal contact method selection (email/phone/SMS)
 
 ### Automated Lead Generation
 - **Multi-Source Web Scraping**: Google search, business directories, and company websites
@@ -21,7 +28,7 @@ LeadNGN is an advanced lead generation and management platform that combines aut
 - **Quality Validation**: Automated verification and scoring of lead data
 - **Duplicate Prevention**: Intelligent deduplication and data cleansing
 
-### Comprehensive Lead Management
+### Enterprise-Grade Management
 - **Advanced Filtering**: Industry, location, quality score, and status-based organization
 - **Interaction Tracking**: Complete communication history and follow-up management
 - **Pipeline Analytics**: Conversion rates, performance metrics, and ROI tracking
@@ -68,8 +75,21 @@ pip install -r requirements.txt
 ### 3. Environment Setup
 Create a `.env` file with the following variables:
 ```env
+# Database Configuration
 DATABASE_URL=postgresql://username:password@localhost:5432/leadngn
-OPENAI_API_KEY=your_openai_api_key_here
+
+# AI Provider Configuration (Choose One or Both)
+OPENAI_API_KEY=your_openai_api_key_here          # For cloud AI processing
+USE_LOCAL_AI=true                                # For local Ollama processing
+OLLAMA_MODEL=llama2:13b                         # Local model (optional)
+OLLAMA_URL=http://localhost:11434               # Ollama server URL
+
+# Communication Services (Optional)
+TWILIO_ACCOUNT_SID=your_twilio_sid              # For phone/SMS features
+TWILIO_AUTH_TOKEN=your_twilio_token
+TWILIO_PHONE_NUMBER=your_twilio_number
+
+# Application Security
 SESSION_SECRET=your_secure_session_secret
 ```
 
@@ -82,7 +102,19 @@ createdb leadngn
 python main.py
 ```
 
-### 5. Run Application
+### 5. AI Provider Setup (Choose Your Approach)
+
+**Option A: OpenAI (Cloud)**
+- Set `OPENAI_API_KEY` in environment
+- Immediate functionality with $0.02 per analysis
+
+**Option B: Local Ollama (Cost-Free)**
+- Install Ollama: `curl -fsSL https://ollama.ai/install.sh | sh`
+- Download model: `ollama pull llama2:13b`
+- Set `USE_LOCAL_AI=true`
+- Zero ongoing costs after setup
+
+### 6. Run Application
 ```bash
 python main.py
 ```
@@ -199,6 +231,25 @@ POST /api/lead/{id}/outreach     # Create personalized outreach
 GET /api/lead/{id}/research      # Get research data
 ```
 
+### Strategic Features
+```bash
+# Email Deliverability
+GET /api/email/validate/{id}     # Single email validation
+POST /api/email/bulk-validate    # Bulk email validation
+
+# Phone Intelligence  
+GET /api/phone/analyze/{id}      # Phone prioritization analysis
+GET /api/phone/call-ready        # Get call-priority leads
+
+# AI Provider Management
+GET /api/ai/provider/status      # Current provider status
+POST /api/ai/provider/switch     # Switch between providers
+
+# Auto-Revalidation
+GET /api/revalidation/status     # System status and metrics
+POST /api/revalidation/force/{id} # Force immediate revalidation
+```
+
 ### Scraping Operations
 ```bash
 POST /api/scraping/start         # Begin new scraping session
@@ -208,7 +259,7 @@ GET /api/scraping/sessions       # List all sessions
 
 ### Analytics
 ```bash
-GET /api/dashboard/stats         # Dashboard metrics
+GET /api/dashboard/stats         # Enhanced dashboard metrics
 GET /api/analytics/performance   # Conversion tracking
 GET /api/analytics/quality       # Lead quality trends
 ```
