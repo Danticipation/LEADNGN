@@ -242,8 +242,8 @@ def new_scraping_session():
         if not sources:
             sources = ['google']  # Default to Google search
         
-        # Import scraping engine
-        from scrapers import LeadScrapingEngine
+        # Import real scraping engine
+        from real_scrapers import LeadScrapingEngine
         
         engine = LeadScrapingEngine()
         result = engine.scrape_leads(

@@ -22,9 +22,28 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="industry" class="form-label">Industry *</label>
-                                    <input type="text" class="form-control" id="industry" name="industry" 
-                                           placeholder="e.g., Software Development, Healthcare, Manufacturing" required>
-                                    <div class="form-text">The industry or business type to search for</div>
+                                    <select class="form-select" id="industry" name="industry" required>
+                                        <option value="">Select Target Industry</option>
+                                        <optgroup label="Tier 1: High Urgency, High Scrapeability">
+                                            <option value="hvac">HVAC Companies</option>
+                                            <option value="plumbing">Plumbing Services</option>
+                                            <option value="legal">Legal Services (Solo & Small Firms)</option>
+                                            <option value="dental">Dentists & Orthodontists</option>
+                                            <option value="medical">Private Medical Practices</option>
+                                            <option value="real_estate">Real Estate Agents & Brokers</option>
+                                            <option value="auto">Auto Dealerships & Repair Shops</option>
+                                        </optgroup>
+                                        <optgroup label="Tier 2: High ROI, Slightly More Effort">
+                                            <option value="property_management">Property Management Firms</option>
+                                            <option value="ecommerce">E-Commerce Brands</option>
+                                            <option value="education">Private Schools & Trade Schools</option>
+                                        </optgroup>
+                                        <optgroup label="Tier 3: Medium Need, High Volume">
+                                            <option value="fitness">Gyms & Fitness Centers</option>
+                                            <option value="events">Event Planners & Wedding Vendors</option>
+                                        </optgroup>
+                                    </select>
+                                    <div class="form-text">Select your target industry for lead generation</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -67,31 +86,22 @@
                         <div class="mb-4">
                             <label class="form-label">Data Sources</label>
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" name="sources" value="google" id="google" checked>
                                         <label class="form-check-label" for="google">
-                                            <i class="fab fa-google me-2"></i>Google Search
+                                            <i class="fab fa-google me-2"></i>Google Business Search
                                         </label>
-                                        <div class="form-text small">General web search for companies</div>
+                                        <div class="form-text small">Local business listings and websites</div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="sources" value="directory" id="directory">
-                                        <label class="form-check-label" for="directory">
-                                            <i class="fas fa-building me-2"></i>Business Directories
+                                        <input class="form-check-input" type="checkbox" name="sources" value="yellowpages" id="yellowpages">
+                                        <label class="form-check-label" for="yellowpages">
+                                            <i class="fas fa-phone me-2"></i>Yellow Pages
                                         </label>
-                                        <div class="form-text small">Yellow Pages, Yelp, BBB listings</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="sources" value="linkedin" id="linkedin">
-                                        <label class="form-check-label" for="linkedin">
-                                            <i class="fab fa-linkedin me-2"></i>LinkedIn
-                                        </label>
-                                        <div class="form-text small">Professional networking platform</div>
+                                        <div class="form-text small">Traditional business directory listings</div>
                                     </div>
                                 </div>
                             </div>
@@ -118,37 +128,51 @@
             <!-- Quick Start Templates -->
             <div class="card mt-4">
                 <div class="card-header">
-                    <h5><i class="fas fa-rocket me-2"></i>Quick Start Templates</h5>
+                    <h5><i class="fas fa-rocket me-2"></i>High-Value Industry Templates</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card bg-light">
                                 <div class="card-body text-center">
-                                    <h6>Tech Startups</h6>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="fillTemplate('Software Development', 'San Francisco', 'startup')">
+                                    <h6>Local HVAC</h6>
+                                    <button class="btn btn-sm btn-success" onclick="fillTemplate('hvac', 'Atlanta, GA', 'small')">
                                         Use Template
                                     </button>
+                                    <small class="text-muted d-block mt-1">High urgency needs</small>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card bg-light">
                                 <div class="card-body text-center">
-                                    <h6>Healthcare Companies</h6>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="fillTemplate('Healthcare', '', 'medium')">
+                                    <h6>Plumbing Services</h6>
+                                    <button class="btn btn-sm btn-success" onclick="fillTemplate('plumbing', 'Phoenix, AZ', 'small')">
                                         Use Template
                                     </button>
+                                    <small class="text-muted d-block mt-1">Emergency services</small>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card bg-light">
                                 <div class="card-body text-center">
-                                    <h6>Manufacturing</h6>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="fillTemplate('Manufacturing', '', 'large')">
+                                    <h6>Dental Practices</h6>
+                                    <button class="btn btn-sm btn-warning" onclick="fillTemplate('dental', 'Dallas, TX', 'medium')">
                                         Use Template
                                     </button>
+                                    <small class="text-muted d-block mt-1">Private practices</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6>Legal Services</h6>
+                                    <button class="btn btn-sm btn-info" onclick="fillTemplate('legal', 'Miami, FL', 'small')">
+                                        Use Template
+                                    </button>
+                                    <small class="text-muted d-block mt-1">Solo & small firms</small>
                                 </div>
                             </div>
                         </div>
@@ -164,6 +188,9 @@ function fillTemplate(industry, location, size) {
     document.getElementById('industry').value = industry;
     document.getElementById('location').value = location;
     document.getElementById('company_size').value = size;
+    
+    // Check the Google source by default
+    document.getElementById('google').checked = true;
 }
 
 document.getElementById('scrapingForm').addEventListener('submit', function(e) {
