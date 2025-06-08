@@ -20,17 +20,116 @@ class LeadRAGSystem:
     """RAG system for intelligent lead analysis and content generation"""
     
     def __init__(self):
-        self.openai_client = None
-        self.setup_openai()
+        self.ai_available = False
+        self.model_name = "llama2:13b"
+        self.setup_ollama()
         self.knowledge_base = {}
         
-    def setup_openai(self):
-        """Initialize OpenAI client if API key is available"""
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if api_key:
-            self.openai_client = openai.OpenAI(api_key=api_key)
+    def setup_ollama(self):
+        """Initialize local Ollama client"""
+        try:
+            # Test connection to local Ollama instance
+            import requests
+            response = requests.get('http://localhost:11434/api/tags', timeout=5)
+            if response.status_code == 200:
+                self.ai_available = True
+                self.model_name = "llama2:13b"
+                logger.info("Ollama local LLM client initialized successfully")
+            else:
+                logger.warning("Ollama service not available on localhost:11434")
+                self.ai_available = False
+        except Exception as e:
+            logger.error(f"Failed to connect to Ollama: {e}")
+            logger.info("Please ensure Ollama is running with: ollama run llama2:13b")
+            self.ai_available = False
+    
+    def call_ollama_api(self, prompt: str, task_type: str = "general") -> Dict[str, Any]:
+        """Call local Ollama API for text generation"""
+        import requests
+        
+        # Customize system prompt based on task type
+        if task_type == "lead_analysis":
+            system_prompt = """You are a B2B lead analysis expert. Analyze the provided lead data and respond with a JSON object containing:
+{
+  "lead_priority": "high|medium|low",
+  "key_insights": ["insight1", "insight2", "insight3"],
+  "pain_points": ["pain1", "pain2"],
+  "outreach_recommendations": ["rec1", "rec2"],
+  "best_contact_method": "email|phone|linkedin",
+  "optimal_timing": "business hours description",
+  "next_steps": ["step1", "step2", "step3"]
+}
+Be concise and actionable. Focus on business value and conversion opportunities."""
+        elif task_type == "outreach":
+            system_prompt = """You are a B2B outreach specialist. Create personalized, professional outreach content. Respond with JSON:
+{
+  "subject": "compelling subject line",
+  "full_message": "complete email text with greeting, value proposition, and call to action"
+}
+Make it personalized, valuable, and action-oriented. Avoid spam language."""
         else:
-            logger.warning("OpenAI API key not found. RAG functionality will be limited.")
+            system_prompt = "You are a helpful business intelligence assistant. Provide clear, actionable insights."
+        
+        full_prompt = f"{system_prompt}\n\nAnalyze this lead data:\n{prompt}"
+        
+        try:
+            response = requests.post(
+                'http://localhost:11434/api/generate',
+                json={
+                    'model': self.model_name,
+                    'prompt': full_prompt,
+                    'stream': False,
+                    'options': {
+                        'temperature': 0.3,
+                        'top_p': 0.9,
+                        'top_k': 40
+                    }
+                },
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                generated_text = result.get('response', '')
+                
+                # Try to extract JSON from the response
+                try:
+                    # Look for JSON content in the response
+                    import re
+                    json_match = re.search(r'\{.*\}', generated_text, re.DOTALL)
+                    if json_match:
+                        return json.loads(json_match.group())
+                    else:
+                        # Fallback structured response
+                        return self.create_fallback_response(task_type, generated_text)
+                except json.JSONDecodeError:
+                    return self.create_fallback_response(task_type, generated_text)
+            else:
+                raise Exception(f"Ollama API returned status {response.status_code}")
+                
+        except Exception as e:
+            logger.error(f"Ollama API error: {e}")
+            return self.create_fallback_response(task_type, str(e))
+    
+    def create_fallback_response(self, task_type: str, content: str) -> Dict[str, Any]:
+        """Create structured fallback response when JSON parsing fails"""
+        if task_type == "lead_analysis":
+            return {
+                "lead_priority": "medium",
+                "key_insights": [content[:200] + "..." if len(content) > 200 else content],
+                "pain_points": ["Analysis available in raw format"],
+                "outreach_recommendations": ["Review the generated analysis"],
+                "best_contact_method": "email",
+                "optimal_timing": "business hours",
+                "next_steps": ["Follow up based on analysis"]
+            }
+        elif task_type == "outreach":
+            return {
+                "subject": "Business Partnership Opportunity",
+                "full_message": content[:500] + "..." if len(content) > 500 else content
+            }
+        else:
+            return {"analysis": content}
     
     def gather_lead_context(self, lead: Lead) -> Dict[str, Any]:
         """Gather comprehensive context about a lead from multiple sources"""
@@ -412,9 +511,13 @@ class LeadRAGSystem:
         return analysis
     
     def generate_lead_insights(self, lead: Lead) -> Dict[str, Any]:
-        """Generate AI-powered insights about a lead using RAG"""
-        if not self.openai_client:
-            return {'error': 'OpenAI API not configured'}
+        """Generate AI-powered insights about a lead using local Ollama"""
+        if not self.ai_available:
+            return {
+                'error': 'Local Ollama LLM not available. Please start Ollama with: ollama run llama2:13b',
+                'key_insights': ['Local AI model required for analysis'],
+                'lead_priority': 'unknown'
+            }
         
         try:
             # Gather all available context
@@ -423,25 +526,8 @@ class LeadRAGSystem:
             # Create a comprehensive prompt for the AI
             prompt = self.build_insight_prompt(context)
             
-            # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
-            # do not change this unless explicitly requested by the user
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a lead intelligence expert. Analyze the provided lead data and generate actionable business insights. Focus on practical recommendations for sales outreach, pain points, and business opportunities."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                response_format={"type": "json_object"},
-                max_tokens=1000
-            )
-            
-            insights = json.loads(response.choices[0].message.content)
+            # Call local Ollama API
+            insights = self.call_ollama_api(prompt, "lead_analysis")
             
             # Add metadata
             insights['generated_at'] = datetime.utcnow().isoformat()
