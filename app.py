@@ -298,9 +298,40 @@ def get_lead_research(lead_id):
     try:
         lead = Lead.query.get_or_404(lead_id)
         
-        from rag_system_openai import LeadRAGSystem
-        rag_system = LeadRAGSystem()
-        research_data = rag_system.gather_lead_context(lead)
+        from ai_provider_manager import ai_provider
+        
+        # Gather basic research data
+        research_data = {
+            "lead_info": {
+                "company": lead.company_name,
+                "industry": lead.industry,
+                "location": lead.location,
+                "contact": lead.contact_name,
+                "website": lead.website,
+                "quality_score": lead.quality_score
+            },
+            "contact_analysis": {},
+            "recommendations": []
+        }
+        
+        # Add email analysis if available
+        if lead.email:
+            try:
+                from email_deliverability import EmailDeliverabilityChecker
+                checker = EmailDeliverabilityChecker()
+                email_validation = checker.validate_email_comprehensive(lead.email)
+                research_data["email_analysis"] = email_validation
+            except:
+                research_data["email_analysis"] = {"error": "Email validation unavailable"}
+        
+        # Add phone analysis if available
+        if lead.phone:
+            try:
+                from phone_integration import phone_manager
+                phone_validation = phone_manager.validate_phone_number(lead.phone)
+                research_data["phone_analysis"] = phone_validation
+            except:
+                research_data["phone_analysis"] = {"error": "Phone validation unavailable"}
         
         return jsonify(research_data)
     
