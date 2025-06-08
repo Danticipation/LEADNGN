@@ -226,9 +226,29 @@ def get_lead_insights(lead_id):
     try:
         lead = Lead.query.get_or_404(lead_id)
         
-        from rag_system_openai import LeadRAGSystem
-        rag_system = LeadRAGSystem()
-        insights = rag_system.generate_lead_insights(lead)
+        from ai_provider_manager import ai_provider
+        
+        # Build analysis prompt
+        prompt = f"""
+Analyze this business lead and provide comprehensive insights in JSON format:
+
+COMPANY: {lead.company_name}
+INDUSTRY: {lead.industry or 'Unknown'}
+LOCATION: {lead.location or 'Unknown'}
+CONTACT: {lead.contact_name or 'Unknown'}
+EMAIL: {lead.email or 'None'}
+PHONE: {lead.phone or 'None'}
+WEBSITE: {lead.website or 'None'}
+QUALITY SCORE: {lead.quality_score}
+
+Provide analysis in JSON format with:
+- business_intelligence (overview, pain_points, opportunities, industry_position)
+- engagement_strategy (approach, timing, key_messages)
+- lead_scoring (interest_level, buying_readiness, authority_level, fit_score)
+- next_steps
+"""
+        
+        insights = ai_provider.generate_analysis(prompt, "analysis")
         
         return jsonify(insights)
     
@@ -243,9 +263,28 @@ def generate_outreach(lead_id):
         lead = Lead.query.get_or_404(lead_id)
         outreach_type = request.json.get('type', 'email') if request.json else 'email'
         
-        from rag_system_openai import LeadRAGSystem
-        rag_system = LeadRAGSystem()
-        outreach_content = rag_system.generate_personalized_outreach(lead, outreach_type)
+        from ai_provider_manager import ai_provider
+        
+        # Build outreach prompt
+        prompt = f"""
+Generate personalized outreach content for this business lead:
+
+COMPANY: {lead.company_name}
+CONTACT: {lead.contact_name or 'there'}
+INDUSTRY: {lead.industry or 'Unknown'}
+LOCATION: {lead.location or 'Unknown'}
+WEBSITE: {lead.website or 'None'}
+OUTREACH TYPE: {outreach_type}
+
+Create compelling, personalized {outreach_type} content in JSON format with:
+- subject_line
+- email_content (under 200 words)
+- key_points
+- tone
+- follow_up_strategy
+"""
+        
+        outreach_content = ai_provider.generate_analysis(prompt, "outreach")
         
         return jsonify(outreach_content)
     
