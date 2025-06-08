@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Leads - LeadNGN{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-users me-2"></i>Lead Management</h2>
+                    <p class="text-muted mb-0">Manage and track your leads with advanced filtering and sorting</p>
+                </div>
+                <a href="/scraping" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>Start New Scraping
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Search & Filter</h6>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Search</label>
+                            <input type="text" class="form-control" name="search" 
+                                   value="{{ current_filters.search or '' }}" 
+                                   placeholder="Search company, contact, or email...">
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label">Industry</label>
+                            <select class="form-select" name="industry">
+                                <option value="">All Industries</option>
+                                {% for industry in industries %}
+                                <option value="{{ industry }}" {{ 'selected' if current_filters.industry == industry }}>{{ industry }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status">
+                                <option value="">All Statuses</option>
+                                <option value="new" {{ 'selected' if current_filters.status == 'new' }}>New</option>
+                                <option value="contacted" {{ 'selected' if current_filters.status == 'contacted' }}>Contacted</option>
+                                <option value="qualified" {{ 'selected' if current_filters.status == 'qualified' }}>Qualified</option>
+                                <option value="converted" {{ 'selected' if current_filters.status == 'converted' }}>Converted</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label">Quality</label>
+                            <select class="form-select" name="quality">
+                                <option value="">All Quality</option>
+                                <option value="high" {{ 'selected' if current_filters.quality == 'high' }}>High (80+)</option>
+                                <option value="medium" {{ 'selected' if current_filters.quality == 'medium' }}>Medium (60-79)</option>
+                                <option value="low" {{ 'selected' if current_filters.quality == 'low' }}>Low (<60)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary d-block w-100">
+                                <i class="fas fa-search me-2"></i>Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leads List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Leads</h6>
+                    {% if leads %}
+                    <span class="badge bg-primary">{{ leads|length }} leads found</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+                    </div>
+                    {% elif leads %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Company</th>
+                                    <th>Contact</th>
+                                    <th>Industry</th>
+                                    <th>Location</th>
+                                    <th>Quality</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lead in leads %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ lead.company_name }}</strong>
+                                        {% if lead.website %}
+                                        <br><small><a href="{{ lead.website }}" target="_blank" class="text-muted">{{ lead.website }}</a></small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if lead.contact_name %}
+                                        <div>{{ lead.contact_name }}</div>
+                                        {% endif %}
+                                        {% if lead.email %}
+                                        <small><a href="mailto:{{ lead.email }}">{{ lead.email }}</a></small><br>
+                                        {% endif %}
+                                        {% if lead.phone %}
+                                        <small><a href="tel:{{ lead.phone }}">{{ lead.phone }}</a></small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ lead.industry or 'N/A' }}</td>
+                                    <td>{{ lead.location or 'N/A' }}</td>
+                                    <td>
+                                        {% if lead.quality_score >= 80 %}
+                                        <span class="badge bg-success">{{ lead.quality_score }}</span>
+                                        {% elif lead.quality_score >= 60 %}
+                                        <span class="badge bg-warning">{{ lead.quality_score }}</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ lead.quality_score }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ lead.lead_status.title() }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="/lead/{{ lead.id }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h5>No leads found</h5>
+                        <p class="text-muted">Try adjusting your search criteria or add new leads.</p>
+                        <a href="/scraping" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add Lead
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

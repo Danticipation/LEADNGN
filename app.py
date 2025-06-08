@@ -178,8 +178,8 @@ def leads_list():
         ).all()
         industries = [i[0] for i in industries if i[0]]
         
-        return render_template('leads.html',
-                             leads=leads,
+        return render_template('leads_simple.html',
+                             leads=leads.items if hasattr(leads, 'items') else leads,
                              industries=industries,
                              current_filters={
                                  'industry': industry_filter,
@@ -192,7 +192,7 @@ def leads_list():
     
     except Exception as e:
         logger.error(f"Error loading leads: {str(e)}")
-        return render_template('leads.html', 
+        return render_template('leads_simple.html', 
                              leads=[], 
                              industries=[],
                              current_filters={

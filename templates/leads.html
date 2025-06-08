@@ -105,7 +105,8 @@
                         <thead>
                             <tr>
                                 <th>
-                                    <a href="{{ url_for('leads_list', sort='company_name', order='asc' if current_filters.sort == 'company_name' and current_filters.order == 'desc' else 'desc', **current_filters) }}" 
+                                    {% set new_order = 'asc' if current_filters.sort == 'company_name' and current_filters.order == 'desc' else 'desc' %}
+                                    <a href="{{ url_for('leads_list', sort='company_name', order=new_order, search=current_filters.search, industry=current_filters.industry, status=current_filters.status, quality=current_filters.quality) }}" 
                                        class="text-decoration-none text-light">
                                         Company
                                         {% if current_filters.sort == 'company_name' %}
