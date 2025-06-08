@@ -192,7 +192,18 @@ def leads_list():
     
     except Exception as e:
         logger.error(f"Error loading leads: {str(e)}")
-        return render_template('leads.html', leads=[], error="Error loading leads")
+        return render_template('leads.html', 
+                             leads=[], 
+                             industries=[],
+                             current_filters={
+                                 'industry': '',
+                                 'status': '',
+                                 'quality': '',
+                                 'search': '',
+                                 'sort': 'created_at',
+                                 'order': 'desc'
+                             },
+                             error="Error loading leads")
 
 @app.route('/lead/<int:lead_id>')
 def lead_detail(lead_id):
