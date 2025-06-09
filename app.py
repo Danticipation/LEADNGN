@@ -455,5 +455,135 @@ def dashboard_stats():
         logger.error(f"Error getting dashboard stats: {str(e)}")
         return jsonify({'error': 'Failed to get statistics'}), 500
 
+# Advanced Feature API Endpoints
+
+@app.route('/api/notifications/settings', methods=['GET'])
+def get_notification_settings():
+    """Get current notification configuration"""
+    try:
+        from notifications import notification_manager
+        settings = notification_manager.get_alert_settings()
+        return jsonify(settings)
+    
+    except Exception as e:
+        logger.error(f"Notification settings error: {str(e)}")
+        return jsonify({'error': 'Failed to get notification settings'}), 500
+
+@app.route('/api/notifications/test', methods=['POST'])
+def test_notifications():
+    """Test notification system"""
+    try:
+        from notifications import notification_manager
+        result = notification_manager.test_notifications()
+        return jsonify(result)
+    
+    except Exception as e:
+        logger.error(f"Notification test error: {str(e)}")
+        return jsonify({'error': 'Failed to test notifications'}), 500
+
+@app.route('/api/accounts/intelligence', methods=['GET'])
+def get_account_intelligence():
+    """Get account-based intelligence summary"""
+    try:
+        from account_intelligence import account_intelligence
+        top_accounts = account_intelligence.get_top_accounts(limit=20)
+        return jsonify({
+            'top_accounts': top_accounts,
+            'total_accounts': len(top_accounts)
+        })
+    
+    except Exception as e:
+        logger.error(f"Account intelligence error: {str(e)}")
+        return jsonify({'error': 'Failed to get account intelligence'}), 500
+
+@app.route('/api/accounts/<domain>/analysis', methods=['GET'])
+def analyze_account_intent(domain):
+    """Analyze buying intent for specific account"""
+    try:
+        from account_intelligence import account_intelligence
+        analysis = account_intelligence.analyze_account_intent(domain)
+        return jsonify(analysis)
+    
+    except Exception as e:
+        logger.error(f"Account analysis error for {domain}: {str(e)}")
+        return jsonify({'error': 'Failed to analyze account intent'}), 500
+
+@app.route('/api/accounts/<domain>/hierarchy', methods=['GET'])
+def get_account_hierarchy(domain):
+    """Get organizational hierarchy for account"""
+    try:
+        from account_intelligence import account_intelligence
+        hierarchy = account_intelligence.get_account_hierarchy(domain)
+        return jsonify(hierarchy)
+    
+    except Exception as e:
+        logger.error(f"Account hierarchy error for {domain}: {str(e)}")
+        return jsonify({'error': 'Failed to get account hierarchy'}), 500
+
+@app.route('/api/leads/<int:lead_id>/audit', methods=['GET'])
+def get_lead_audit_history(lead_id):
+    """Get complete audit history for a lead"""
+    try:
+        from lead_audit import audit_manager
+        limit = int(request.args.get('limit', 50))
+        history = audit_manager.get_lead_history(lead_id, limit)
+        return jsonify({
+            'lead_id': lead_id,
+            'history': history,
+            'total_changes': len(history)
+        })
+    
+    except Exception as e:
+        logger.error(f"Lead audit history error for {lead_id}: {str(e)}")
+        return jsonify({'error': 'Failed to get audit history'}), 500
+
+@app.route('/api/leads/<int:lead_id>/score-evolution', methods=['GET'])
+def get_lead_score_evolution(lead_id):
+    """Get quality score evolution for a lead"""
+    try:
+        from lead_audit import audit_manager
+        evolution = audit_manager.get_quality_score_evolution(lead_id)
+        return jsonify(evolution)
+    
+    except Exception as e:
+        logger.error(f"Score evolution error for {lead_id}: {str(e)}")
+        return jsonify({'error': 'Failed to get score evolution'}), 500
+
+@app.route('/api/team/activity', methods=['GET'])
+def get_team_activity():
+    """Get team activity summary for collaboration"""
+    try:
+        from lead_audit import audit_manager
+        days = int(request.args.get('days', 7))
+        activity = audit_manager.get_team_activity_summary(days)
+        return jsonify(activity)
+    
+    except Exception as e:
+        logger.error(f"Team activity error: {str(e)}")
+        return jsonify({'error': 'Failed to get team activity'}), 500
+
+@app.route('/api/leads/<int:lead_id>/revert', methods=['POST'])
+def revert_lead_field(lead_id):
+    """Revert a lead field to previous value"""
+    try:
+        field_name = request.json.get('field_name')
+        target_timestamp = request.json.get('target_timestamp')
+        reverted_by = request.json.get('reverted_by', 'unknown')
+        
+        if not field_name or not target_timestamp:
+            return jsonify({'error': 'field_name and target_timestamp required'}), 400
+        
+        from lead_audit import audit_manager
+        success = audit_manager.revert_lead_field(lead_id, field_name, target_timestamp, reverted_by)
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Field reverted successfully'})
+        else:
+            return jsonify({'error': 'Failed to revert field'}), 400
+    
+    except Exception as e:
+        logger.error(f"Field revert error for {lead_id}: {str(e)}")
+        return jsonify({'error': 'Failed to revert field'}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

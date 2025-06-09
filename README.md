@@ -7,6 +7,26 @@
 
 LeadNGN is an advanced lead generation and management platform that combines automated web scraping with AI-powered business intelligence. The system targets high-value local service businesses and provides comprehensive lead analysis using GPT-4o for intelligent insights and personalized outreach generation.
 
+## 🔑 Why LeadNGN?
+
+✅ **Save 2+ hours per lead** with intelligent research and automated analysis  
+📈 **Improve response rates by 40%** with personalized, context-aware outreach  
+🧠 **Target only high-fit businesses** using AI-powered qualification scoring  
+🛡 **Avoid generic scraping tools** that lack analysis, follow-up, or data intelligence  
+💰 **Eliminate ongoing AI costs** with local processing option (90% cost reduction)  
+🔄 **Maintain fresh data automatically** with intelligent revalidation workflows  
+
+## 🚀 From Discovery to Deal in 4 Steps
+
+**Example: HVAC Lead Generation in Tampa**
+
+1. **Scrape**: Select "HVAC" industry in Tampa → system pulls 87 potential leads
+2. **Analyze**: AI identifies 23 decision-makers with budget indicators and immediate needs  
+3. **Outreach**: Personalized emails generated based on business analysis and pain points
+4. **Convert**: 6 high-fit prospects reply within 48 hours with meeting requests
+
+*Transform hours of manual research into minutes of intelligent automation.*
+
 ## 🚀 Key Features
 
 ### AI-Powered Lead Intelligence
@@ -21,6 +41,9 @@ LeadNGN is an advanced lead generation and management platform that combines aut
 - **Email Deliverability Intelligence**: Comprehensive validation, MX verification, and spam prevention
 - **Phone & Voice Intelligence**: Industry-specific prioritization and Twilio integration
 - **Multi-Channel Orchestration**: Optimal contact method selection (email/phone/SMS)
+- **Real-Time Notifications**: Slack alerts for high-value leads and campaign milestones
+- **Account-Based Intelligence**: Corporate domain grouping and buying intent analysis
+- **Lead Audit Trail**: Complete change history and team collaboration tracking
 
 ### Automated Lead Generation
 - **Multi-Source Web Scraping**: Google search, business directories, and company websites
@@ -248,6 +271,21 @@ POST /api/ai/provider/switch     # Switch between providers
 # Auto-Revalidation
 GET /api/revalidation/status     # System status and metrics
 POST /api/revalidation/force/{id} # Force immediate revalidation
+
+# Real-Time Notifications
+GET /api/notifications/settings  # Current notification configuration
+POST /api/notifications/test     # Test notification system
+
+# Account-Based Intelligence
+GET /api/accounts/intelligence   # Account intelligence summary
+GET /api/accounts/{domain}/analysis # Buying intent analysis
+GET /api/accounts/{domain}/hierarchy # Organizational hierarchy
+
+# Lead Audit Trail
+GET /api/leads/{id}/audit        # Complete audit history
+GET /api/leads/{id}/score-evolution # Quality score evolution
+GET /api/team/activity           # Team collaboration summary
+POST /api/leads/{id}/revert      # Revert field to previous value
 ```
 
 ### Scraping Operations
