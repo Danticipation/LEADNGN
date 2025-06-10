@@ -159,9 +159,14 @@
                     <a href="/leads" class="btn btn-outline-primary btn-sm">
                         <i class="fas fa-external-link-alt me-1"></i>View All
                     </a>
-                    <button class="btn btn-success btn-sm" onclick="startScraping()">
-                        <i class="fas fa-plus me-1"></i>Add Lead
-                    </button>
+                    <div class="btn-group">
+                        <button class="btn btn-primary btn-sm" onclick="startScraping()">
+                            <i class="fas fa-spider me-1"></i>New Scraping
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="testFeatures()">
+                            <i class="fas fa-flask me-1"></i>Test Features
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -329,22 +334,307 @@
 
 {% block scripts %}
 <script>
-function editLead(leadId) {
-    // Placeholder for lead editing functionality
-    alert('Edit lead functionality coming soon!');
+// Enhanced Dashboard Functionality
+let dashboardStats = {};
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardStats();
+    setupRealTimeUpdates();
+    animateStatCards();
+});
+
+// Load dashboard statistics
+async function loadDashboardStats() {
+    try {
+        const response = await fetch('/api/dashboard/stats');
+        dashboardStats = await response.json();
+        updateStatCards();
+    } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+        showNotification('Failed to load dashboard statistics', 'error');
+    }
 }
 
+// Update stat cards with animation
+function updateStatCards() {
+    const cards = document.querySelectorAll('.stat-card');
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.transform = 'translateY(-5px)';
+            setTimeout(() => {
+                card.style.transform = 'translateY(0)';
+            }, 200);
+        }, index * 100);
+    });
+}
+
+// Animate stat cards on load
+function animateStatCards() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animation = 'fadeInUp 0.6s ease forwards';
+            }
+        });
+    });
+
+    document.querySelectorAll('.stat-card').forEach(card => {
+        observer.observe(card);
+    });
+}
+
+// Test all advanced features
+async function testFeatures() {
+    showNotification('Testing LeadNGN advanced features...', 'info');
+    
+    const tests = [
+        { name: 'Dashboard Stats', endpoint: '/api/dashboard/stats' },
+        { name: 'AI Provider Status', endpoint: '/api/ai/provider/status' },
+        { name: 'Notification Settings', endpoint: '/api/notifications/settings' },
+        { name: 'Account Intelligence', endpoint: '/api/accounts/intelligence' }
+    ];
+
+    const testResults = document.createElement('div');
+    testResults.className = 'alert alert-info mt-3';
+    testResults.innerHTML = `
+        <h5><i class="fas fa-flask text-warning me-2"></i>Feature Test Results</h5>
+        <div id="test-progress"></div>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(testResults, container.firstChild);
+    
+    const progressDiv = document.getElementById('test-progress');
+    
+    for (let test of tests) {
+        try {
+            const response = await fetch(test.endpoint);
+            const data = await response.json();
+            
+            const result = document.createElement('div');
+            result.className = 'mb-2';
+            result.innerHTML = `
+                <i class="fas fa-check-circle text-success me-2"></i>
+                <strong>${test.name}:</strong> 
+                <span class="text-success">Working</span>
+                <small class="text-muted d-block ms-4">Response: ${JSON.stringify(data).substring(0, 100)}...</small>
+            `;
+            progressDiv.appendChild(result);
+        } catch (error) {
+            const result = document.createElement('div');
+            result.className = 'mb-2';
+            result.innerHTML = `
+                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                <strong>${test.name}:</strong> 
+                <span class="text-warning">Needs Setup</span>
+                <small class="text-muted d-block ms-4">Error: ${error.message}</small>
+            `;
+            progressDiv.appendChild(result);
+        }
+        
+        // Add delay between tests
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    // Auto-remove test results after 10 seconds
+    setTimeout(() => {
+        testResults.remove();
+    }, 10000);
+}
+
+// Start scraping session
 function startScraping() {
+    showLoadingModal('Preparing scraping session...');
     window.location.href = '/scraping';
 }
 
-// Auto-refresh dashboard every 30 seconds
-setInterval(function() {
-    // Only refresh if no filters are applied
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.toString() === '') {
-        location.reload();
+// Edit lead functionality
+function editLead(leadId) {
+    showLeadEditor(leadId);
+}
+
+// Show lead editor modal
+function showLeadEditor(leadId) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="background: var(--black-secondary); border: 1px solid var(--black-tertiary);">
+                <div class="modal-header" style="border-bottom: 2px solid var(--primary-gold);">
+                    <h5 class="modal-title text-light">
+                        <i class="fas fa-edit text-warning me-2"></i>Edit Lead #${leadId}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center py-4">
+                        <div class="loading-shimmer" style="height: 200px; border-radius: 10px;">
+                            <div class="d-flex align-items-center justify-content-center h-100">
+                                <i class="fas fa-spinner fa-spin fa-2x text-warning me-3"></i>
+                                <span class="text-light">Loading lead details...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--black-tertiary);">
+                    <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+    
+    // Remove modal from DOM when closed
+    modal.addEventListener('hidden.bs.modal', () => {
+        modal.remove();
+    });
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = `
+        top: 20px; 
+        right: 20px; 
+        z-index: 9999; 
+        min-width: 300px;
+        background: var(--black-secondary);
+        border: 1px solid var(--primary-gold);
+        color: white;
+    `;
+    
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Show loading modal
+function showLoadingModal(message) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: var(--black-secondary); border: 1px solid var(--primary-gold);">
+                <div class="modal-body text-center py-5">
+                    <div class="loading-shimmer mb-3" style="height: 4px; border-radius: 2px;"></div>
+                    <i class="fas fa-spinner fa-spin fa-3x text-warning mb-3"></i>
+                    <h5 class="text-light">${message}</h5>
+                    <p class="text-muted">Please wait while we process your request...</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const modalInstance = new bootstrap.Modal(modal, { backdrop: 'static' });
+    modalInstance.show();
+    
+    return modalInstance;
+}
+
+// Setup real-time updates
+function setupRealTimeUpdates() {
+    // Update dashboard stats every 30 seconds
+    setInterval(async () => {
+        try {
+            const response = await fetch('/api/dashboard/stats');
+            const newStats = await response.json();
+            
+            // Check for changes and show notifications
+            if (newStats.total_leads > dashboardStats.total_leads) {
+                showNotification(`New lead added! Total: ${newStats.total_leads}`, 'success');
+            }
+            
+            dashboardStats = newStats;
+        } catch (error) {
+            console.error('Error updating stats:', error);
+        }
+    }, 30000);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+            case 'k':
+                e.preventDefault();
+                document.querySelector('input[name="industry"]').focus();
+                break;
+            case 't':
+                e.preventDefault();
+                testFeatures();
+                break;
+            case 'n':
+                e.preventDefault();
+                startScraping();
+                break;
+        }
     }
-}, 30000);
+});
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .stat-card {
+        animation: fadeInUp 0.6s ease forwards;
+        opacity: 0;
+    }
+    
+    .lead-row {
+        animation: fadeInUp 0.4s ease forwards;
+        opacity: 0;
+    }
+    
+    .lead-row:nth-child(odd) { animation-delay: 0.1s; }
+    .lead-row:nth-child(even) { animation-delay: 0.2s; }
+`;
+document.head.appendChild(style);
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
+// Performance monitoring
+let pageLoadTime = performance.now();
+window.addEventListener('load', function() {
+    const loadTime = performance.now() - pageLoadTime;
+    console.log(`Dashboard loaded in ${loadTime.toFixed(2)}ms`);
+    
+    if (loadTime > 2000) {
+        showNotification('Dashboard loaded slowly. Consider optimizing.', 'warning');
+    }
+});
 </script>
 {% endblock %}
