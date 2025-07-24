@@ -2,7 +2,7 @@ modules = ["python-3.11", "postgresql-16", "python3"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["chromedriver", "chromium", "geckodriver", "openssl", "postgresql", "xcodebuild", "zlib"]
+packages = ["cacert", "chromedriver", "chromium", "geckodriver", "openssl", "postgresql", "xcodebuild", "zlib"]
 
 [deployment]
 deploymentTarget = "autoscale"

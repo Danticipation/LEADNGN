@@ -1,0 +1,342 @@
+Let's adapt your LeadNGN system to work with Ollama and Mistral 7B.
+Step 1: Install Ollama Python Client
+bashpip install ollama
+Step 2: Create Ollama Integration Function
+pythonimport ollama
+import json
+
+def analyze_lead_with_ollama(lead_data):
+    """Analyze lead using local Mistral 7B via Ollama"""
+    
+    # Create the analysis prompt
+    prompt = f"""
+You are a business intelligence analyst specializing in B2B lead qualification. Analyze this business and provide structured insights.
+
+BUSINESS INFORMATION:
+Company: {lead_data.get('company_name', 'Unknown')}
+Website: {lead_data.get('website', 'Not provided')}
+Industry: {lead_data.get('industry', 'Unknown')}
+Location: {lead_data.get('location', 'Unknown')}
+Contact: {lead_data.get('contact_name', 'Unknown')}
+Services: {lead_data.get('services', 'Unknown')}
+
+ANALYSIS REQUIREMENTS:
+Provide a JSON response with exactly this structure:
+
+{{
+    "business_overview": "2-3 sentence summary of the business",
+    "pain_points": ["specific challenge 1", "specific challenge 2", "specific challenge 3"],
+    "industry_positioning": "brief assessment of their market position",
+    "technology_adoption": "basic|medium|advanced",
+    "employee_count": "small|medium|large", 
+    "revenue_assessment": "small|medium|high",
+    "business_maturity": "startup|established|enterprise",
+    "decision_maker_profile": "brief description of likely decision maker",
+    "engagement_strategy": "recommended approach for initial contact",
+    "automation_opportunities": ["opportunity 1", "opportunity 2", "opportunity 3"],
+    "confidence_score": 85
+}}
+
+Focus on identifying automation opportunities and operational challenges that YoBot® AI agents could solve.
+
+RESPOND ONLY WITH VALID JSON. NO OTHER TEXT.
+"""
+
+    try:
+        # Call Ollama
+        response = ollama.chat(
+            model='mistral:7b',
+            messages=[{
+                'role': 'user',
+                'content': prompt
+            }],
+            options={
+                'temperature': 0.3,  # Lower temperature for more consistent output
+                'top_p': 0.9,
+                'repeat_penalty': 1.1
+            }
+        )
+        
+        # Extract and parse JSON
+        response_text = response['message']['content'].strip()
+        
+        # Clean up response if it has markdown formatting
+        if response_text.startswith('```json'):
+            response_text = response_text.replace('```json', '').replace('```', '').strip()
+        
+        # Parse JSON
+        analysis_data = json.loads(response_text)
+        
+        return analysis_data
+        
+    except json.JSONDecodeError as e:
+        print(f"JSON parsing error with Ollama response: {e}")
+        print(f"Raw response: {response_text}")
+        
+        # Fallback - try to extract JSON from response
+        return extract_json_fallback(response_text)
+        
+    except Exception as e:
+        print(f"Error calling Ollama: {e}")
+        return generate_fallback_analysis(lead_data)
+
+def extract_json_fallback(text):
+    """Try to extract JSON from malformed response"""
+    import re
+    
+    # Look for JSON-like structure
+    json_match = re.search(r'\{.*\}', text, re.DOTALL)
+    if json_match:
+        try:
+            return json.loads(json_match.group())
+        except:
+            pass
+    
+    # Return minimal structure if all else fails
+    return {
+        "business_overview": "Analysis could not be completed",
+        "pain_points": ["Unable to identify specific pain points"],
+        "technology_adoption": "medium",
+        "confidence_score": 30
+    }
+Step 3: Ollama Email Generation Function
+pythondef generate_consultant_email_ollama(lead_id):
+    """Generate consultant email using Ollama"""
+    
+    # Get lead and analysis data
+    lead = get_lead_by_id(lead_id)
+    ai_data = json.loads(lead.ai_analysis) if lead.ai_analysis else {}
+    
+    # Assess business type (use existing function)
+    assessment = assess_business_for_consultant_approach(lead_id)
+    
+    # Create email generation prompt
+    prompt = f"""
+You are an expert B2B email copywriter specializing in HVAC business automation. Write a personalized consultant-style email.
+
+LEAD INFORMATION:
+Company: {lead.company_name}
+Contact: {lead.contact_name or 'Business Owner'}
+Business Type: {assessment['business_type']}
+Setup Time: {assessment['setup_time']}
+Pain Points: {ai_data.get('pain_points', [])}
+Location: Phoenix, Arizona (115°F+ heat wave)
+
+EMAIL REQUIREMENTS:
+- Consultant positioning (expert advisor, not vendor)
+- Focus on complete business automation solution
+- Mention YoBot® AI agents for 24/7 call handling
+- Arizona summer heat urgency
+- Free trial offer during heat wave
+- Professional but conversational tone
+
+Generate 3 subject line options and 1 email body.
+
+RESPOND IN THIS EXACT JSON FORMAT:
+{{
+    "subject_lines": [
+        "subject option 1",
+        "subject option 2", 
+        "subject option 3"
+    ],
+    "email_body": "full email text here"
+}}
+
+RESPOND ONLY WITH VALID JSON. NO OTHER TEXT.
+"""
+
+    try:
+        response = ollama.chat(
+            model='mistral:7b',
+            messages=[{'role': 'user', 'content': prompt}],
+            options={
+                'temperature': 0.4,
+                'top_p': 0.9
+            }
+        )
+        
+        response_text = response['message']['content'].strip()
+        
+        # Clean markdown formatting
+        if response_text.startswith('```json'):
+            response_text = response_text.replace('```json', '').replace('```', '').strip()
+        
+        email_data = json.loads(response_text)
+        
+        # Add additional data
+        email_data['business_assessment'] = assessment
+        email_data['personalization_used'] = {
+            'contact_name': lead.contact_name or 'there',
+            'company_name': lead.company_name,
+            'business_type': assessment['business_type']
+        }
+        
+        return email_data
+        
+    except Exception as e:
+        print(f"Error generating email with Ollama: {e}")
+        # Fallback to template-based generation
+        return generate_consultant_email(lead_id)
+Step 4: Update Your API Endpoints
+python@app.route('/api/analyze-lead-ollama', methods=['POST'])
+def analyze_lead_ollama_api():
+    """Analyze lead using local Ollama"""
+    
+    try:
+        data = request.get_json()
+        lead_id = data.get('lead_id')
+        
+        if not lead_id:
+            return jsonify({'success': False, 'error': 'Lead ID required'})
+        
+        # Get lead data
+        lead = get_lead_by_id(lead_id)
+        if not lead:
+            return jsonify({'success': False, 'error': 'Lead not found'})
+        
+        # Prepare lead data for analysis
+        lead_data = {
+            'company_name': lead.company_name,
+            'website': lead.website,
+            'industry': lead.industry,
+            'location': lead.location,
+            'contact_name': lead.contact_name,
+            'services': lead.services or 'Unknown'
+        }
+        
+        # Analyze with Ollama
+        analysis = analyze_lead_with_ollama(lead_data)
+        
+        # Store analysis in database
+        update_query = "UPDATE leads SET ai_analysis = %s WHERE id = %s"
+        execute_query(update_query, (json.dumps(analysis), lead_id))
+        
+        return jsonify({
+            'success': True,
+            'analysis': analysis
+        })
+        
+    except Exception as e:
+        print(f"Error in Ollama analysis: {str(e)}")
+        return jsonify({'success': False, 'error': 'Analysis failed'})
+
+@app.route('/api/generate-consultant-email-ollama', methods=['POST'])
+def generate_consultant_email_ollama_api():
+    """Generate email using Ollama"""
+    
+    try:
+        data = request.get_json()
+        lead_id = data.get('lead_id')
+        
+        email_data = generate_consultant_email_ollama(lead_id)
+        
+        return jsonify({
+            'success': True,
+            'email_data': email_data
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+Step 5: Add Ollama UI Buttons
+html<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">AI Analysis & Outreach (Local Ollama)</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <button id="analyze-lead-ollama" class="btn btn-info btn-block">
+                    <i class="fas fa-brain"></i> Analyze with Mistral 7B
+                </button>
+            </div>
+            <div class="col-md-6">
+                <button id="generate-email-ollama" class="btn btn-success btn-block">
+                    <i class="fas fa-envelope"></i> Generate Email (Ollama)
+                </button>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <small class="text-muted">
+                <i class="fas fa-server"></i> Using local Mistral 7B model - No API costs!
+            </small>
+        </div>
+    </div>
+</div>
+Step 6: JavaScript for Ollama Buttons
+javascript// Ollama Analysis Button
+document.getElementById('analyze-lead-ollama').addEventListener('click', function() {
+    const leadId = getCurrentLeadId();
+    const button = this;
+    
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+    
+    fetch('/api/analyze-lead-ollama', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({lead_id: leadId})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayAnalysisResults(data.analysis);
+            alert('Analysis complete! Confidence: ' + data.analysis.confidence_score + '%');
+        } else {
+            alert('Analysis failed: ' + data.error);
+        }
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-brain"></i> Analyze with Mistral 7B';
+    });
+});
+
+// Ollama Email Generation Button  
+document.getElementById('generate-email-ollama').addEventListener('click', function() {
+    const leadId = getCurrentLeadId();
+    const button = this;
+    
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    
+    fetch('/api/generate-consultant-email-ollama', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({lead_id: leadId})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayGeneratedEmail(data.email_data);
+        } else {
+            alert('Email generation failed: ' + data.error);
+        }
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-envelope"></i> Generate Email (Ollama)';
+    });
+});
+Step 7: Test Ollama Connection
+pythondef test_ollama_connection():
+    """Test if Ollama and Mistral 7B are working"""
+    
+    try:
+        response = ollama.chat(
+            model='mistral:7b',
+            messages=[{
+                'role': 'user', 
+                'content': 'Respond with exactly: {"status": "working", "model": "mistral-7b"}'
+            }]
+        )
+        
+        print("Ollama Response:", response['message']['content'])
+        return True
+        
+    except Exception as e:
+        print(f"Ollama connection failed: {e}")
+        return False
+
+# Run this test
+# test_ollama_connection()

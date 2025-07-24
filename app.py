@@ -1233,5 +1233,144 @@ def get_lead_email_performance(lead_id):
         logger.error(f"Lead email performance error: {e}")
         return jsonify({'error': 'Failed to get email performance'}), 500
 
+# Ollama Integration Endpoints
+@app.route('/api/ollama/test-connection', methods=['GET'])
+def test_ollama_connection():
+    """Test Ollama connection and Mistral 7B availability"""
+    try:
+        from features.ollama_integration import ollama_analyzer
+        connection_status = ollama_analyzer.test_connection()
+        return jsonify(connection_status)
+    
+    except Exception as e:
+        logger.error(f"Ollama connection test error: {e}")
+        return jsonify({
+            'status': 'error',
+            'available': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/analyze-lead-ollama', methods=['POST'])
+def analyze_lead_ollama_api():
+    """Analyze lead using local Ollama"""
+    try:
+        data = request.get_json() or {}
+        lead_id = data.get('lead_id')
+        
+        if not lead_id:
+            return jsonify({'success': False, 'error': 'Lead ID required'}), 400
+        
+        # Get lead data
+        lead = Lead.query.get(lead_id)
+        if not lead:
+            return jsonify({'success': False, 'error': 'Lead not found'}), 404
+        
+        # Prepare lead data for analysis
+        lead_data = {
+            'company_name': lead.company_name,
+            'website': lead.website,
+            'industry': lead.industry,
+            'location': lead.location,
+            'contact_name': lead.contact_name,
+            'description': lead.description or 'Professional business services'
+        }
+        
+        # Analyze with Ollama
+        from features.ollama_integration import ollama_analyzer
+        analysis = ollama_analyzer.analyze_lead_with_ollama(lead_data)
+        
+        # Store analysis in database
+        import json
+        lead.ai_analysis = json.dumps(analysis)
+        lead.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'analysis': analysis,
+            'provider': 'ollama_mistral7b',
+            'updated_at': datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in Ollama analysis: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/generate-consultant-email-ollama', methods=['POST'])
+def generate_consultant_email_ollama_api():
+    """Generate consultant email using Ollama"""
+    try:
+        data = request.get_json() or {}
+        lead_id = data.get('lead_id')
+        
+        if not lead_id:
+            return jsonify({'error': 'lead_id required'}), 400
+        
+        from features.ollama_integration import ollama_analyzer
+        email_data = ollama_analyzer.generate_consultant_email_ollama(lead_id)
+        
+        # Track email generation in analytics if successful
+        if email_data.get('success') and 'subject_lines' in email_data.get('email_data', {}):
+            try:
+                from features.analytics_dashboard import analytics_dashboard
+                analytics_dashboard.track_email_sent(
+                    lead_id,
+                    'consultant_ollama',
+                    email_data['email_data']['subject_lines'][0]
+                )
+            except Exception as e:
+                logger.warning(f"Failed to track email analytics: {e}")
+        
+        return jsonify(email_data)
+        
+    except Exception as e:
+        logger.error(f"Ollama email generation error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai-provider-comparison/<int:lead_id>', methods=['GET'])
+def ai_provider_comparison(lead_id):
+    """Compare analysis from both OpenAI and Ollama"""
+    try:
+        lead = Lead.query.get(lead_id)
+        if not lead:
+            return jsonify({'error': 'Lead not found'}), 404
+        
+        # Prepare lead data
+        lead_data = {
+            'company_name': lead.company_name,
+            'website': lead.website,
+            'industry': lead.industry,
+            'location': lead.location,
+            'contact_name': lead.contact_name,
+            'description': lead.description or 'Professional business services'
+        }
+        
+        # Get OpenAI analysis
+        try:
+            from rag_system_openai import rag_system
+            openai_analysis = rag_system.analyze_lead_business_intelligence(lead_data)
+        except Exception as e:
+            openai_analysis = {'error': f'OpenAI analysis failed: {str(e)}'}
+        
+        # Get Ollama analysis
+        try:
+            from features.ollama_integration import ollama_analyzer
+            ollama_analysis = ollama_analyzer.analyze_lead_with_ollama(lead_data)
+        except Exception as e:
+            ollama_analysis = {'error': f'Ollama analysis failed: {str(e)}'}
+        
+        return jsonify({
+            'lead_id': lead_id,
+            'company_name': lead.company_name,
+            'openai_analysis': openai_analysis,
+            'ollama_analysis': ollama_analysis,
+            'comparison_generated_at': datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"AI provider comparison error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
