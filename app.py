@@ -1141,5 +1141,97 @@ def add_to_do_not_contact():
         logger.error(f"Do-not-contact error: {e}")
         return jsonify({'error': 'Failed to add to do-not-contact list'}), 500
 
+# Email Tracking System Endpoints
+@app.route('/api/generate-tracked-email', methods=['POST'])
+def generate_tracked_email():
+    """Generate consultant email with full tracking"""
+    try:
+        data = request.get_json() or {}
+        lead_id = data.get('lead_id')
+        template_type = data.get('template_type', 'introduction')
+        user_id = data.get('user_id', 'system')
+        
+        if not lead_id:
+            return jsonify({'error': 'lead_id required'}), 400
+        
+        from features.email_tracking import email_tracker
+        tracked_email = email_tracker.generate_tracked_email(lead_id, template_type, user_id)
+        return jsonify(tracked_email)
+    
+    except Exception as e:
+        logger.error(f"Tracked email generation error: {e}")
+        return jsonify({'error': 'Failed to generate tracked email'}), 500
+
+@app.route('/track/open/<tracking_id>')
+def track_email_open(tracking_id):
+    """Track email opens with 1x1 pixel"""
+    try:
+        from features.email_tracking import email_tracker
+        email_tracker.record_tracking_event(
+            tracking_id=tracking_id,
+            event_type='open',
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent')
+        )
+    except Exception as e:
+        logger.error(f"Error tracking email open: {e}")
+    
+    # Return 1x1 transparent PNG
+    pixel_data = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\xf8\x0f\x00\x00\x01\x00\x01\x00\x00\x00\x00\x00\x00'
+    
+    return Response(pixel_data, mimetype='image/png')
+
+@app.route('/track/click')
+def track_email_click():
+    """Track email clicks and redirect"""
+    tracking_id = request.args.get('tid')
+    original_url = request.args.get('url')
+    
+    if not tracking_id or not original_url:
+        return "Invalid tracking link", 400
+    
+    try:
+        from features.email_tracking import email_tracker
+        email_tracker.record_tracking_event(
+            tracking_id=tracking_id,
+            event_type='click',
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent'),
+            click_url=original_url
+        )
+    except Exception as e:
+        logger.error(f"Error tracking email click: {e}")
+    
+    # Redirect to original URL
+    return redirect(original_url)
+
+@app.route('/api/email-tracking-stats')
+def email_tracking_stats_api():
+    """API endpoint for email tracking statistics"""
+    try:
+        lead_id = request.args.get('lead_id', type=int)
+        days = request.args.get('days', 30, type=int)
+        email_id = request.args.get('email_id', type=int)
+        
+        from features.email_tracking import email_tracker
+        stats = email_tracker.get_email_tracking_stats(lead_id, days, email_id)
+        return jsonify(stats)
+    
+    except Exception as e:
+        logger.error(f"Email tracking stats error: {e}")
+        return jsonify({'error': 'Failed to get tracking stats'}), 500
+
+@app.route('/api/leads/<int:lead_id>/email-performance')
+def get_lead_email_performance(lead_id):
+    """Get email performance for specific lead"""
+    try:
+        from features.email_tracking import email_tracker
+        performance = email_tracker.get_lead_email_performance(lead_id)
+        return jsonify(performance)
+    
+    except Exception as e:
+        logger.error(f"Lead email performance error: {e}")
+        return jsonify({'error': 'Failed to get email performance'}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
