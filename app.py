@@ -983,5 +983,163 @@ def generate_consultant_email():
         logger.error(f"Consultant email generation error: {e}")
         return jsonify({'error': 'Failed to generate consultant email'}), 500
 
+# Data Validation & Quality Endpoints
+@app.route('/api/leads/<int:lead_id>/validate', methods=['POST'])
+def validate_lead_data(lead_id):
+    """Validate lead data quality"""
+    try:
+        data = request.get_json() or {}
+        deep_validation = data.get('deep_validation', False)
+        
+        from features.data_validation import data_validator
+        validation_result = data_validator.validate_lead_data(lead_id, deep_validation)
+        return jsonify(validation_result)
+    
+    except Exception as e:
+        logger.error(f"Lead validation error for {lead_id}: {e}")
+        return jsonify({'error': 'Validation failed'}), 500
+
+@app.route('/api/leads/bulk-validate', methods=['POST'])
+def bulk_validate_leads():
+    """Bulk validate multiple leads"""
+    try:
+        data = request.get_json() or {}
+        lead_ids = data.get('lead_ids', [])
+        
+        if not lead_ids:
+            return jsonify({'error': 'lead_ids required'}), 400
+        
+        from features.data_validation import data_validator
+        validation_result = data_validator.bulk_validate_leads(lead_ids)
+        return jsonify(validation_result)
+    
+    except Exception as e:
+        logger.error(f"Bulk validation error: {e}")
+        return jsonify({'error': 'Bulk validation failed'}), 500
+
+# Bulk Operations Endpoints
+@app.route('/api/leads/bulk-delete', methods=['POST'])
+def bulk_delete_leads():
+    """Bulk delete multiple leads"""
+    try:
+        data = request.get_json() or {}
+        lead_ids = data.get('lead_ids', [])
+        user_id = data.get('user_id', 'system')
+        
+        if not lead_ids:
+            return jsonify({'error': 'lead_ids required'}), 400
+        
+        from features.bulk_operations import bulk_operations_manager
+        result = bulk_operations_manager.bulk_delete_leads(lead_ids, user_id)
+        return jsonify(result)
+    
+    except Exception as e:
+        logger.error(f"Bulk delete error: {e}")
+        return jsonify({'error': 'Bulk delete failed'}), 500
+
+@app.route('/api/leads/bulk-tag', methods=['POST'])
+def bulk_tag_leads():
+    """Bulk add/remove tags from leads"""
+    try:
+        data = request.get_json() or {}
+        lead_ids = data.get('lead_ids', [])
+        tags_to_add = data.get('tags_to_add', [])
+        tags_to_remove = data.get('tags_to_remove', [])
+        
+        if not lead_ids:
+            return jsonify({'error': 'lead_ids required'}), 400
+        
+        from features.bulk_operations import bulk_operations_manager
+        result = bulk_operations_manager.bulk_tag_leads(lead_ids, tags_to_add, tags_to_remove)
+        return jsonify(result)
+    
+    except Exception as e:
+        logger.error(f"Bulk tag error: {e}")
+        return jsonify({'error': 'Bulk tag operation failed'}), 500
+
+@app.route('/api/leads/bulk-export', methods=['POST'])
+def bulk_export_leads():
+    """Export multiple leads"""
+    try:
+        data = request.get_json() or {}
+        lead_ids = data.get('lead_ids', [])
+        export_format = data.get('format', 'csv')
+        
+        if not lead_ids:
+            return jsonify({'error': 'lead_ids required'}), 400
+        
+        from features.bulk_operations import bulk_operations_manager
+        result = bulk_operations_manager.bulk_export_leads(lead_ids, export_format)
+        return jsonify(result)
+    
+    except Exception as e:
+        logger.error(f"Bulk export error: {e}")
+        return jsonify({'error': 'Bulk export failed'}), 500
+
+# Lead Health Scoring
+@app.route('/api/leads/<int:lead_id>/health-score', methods=['GET'])
+def get_lead_health_score(lead_id):
+    """Get comprehensive lead health score"""
+    try:
+        from features.bulk_operations import lead_health_scorer
+        health_score = lead_health_scorer.calculate_lead_health_score(lead_id)
+        return jsonify(health_score)
+    
+    except Exception as e:
+        logger.error(f"Lead health scoring error for {lead_id}: {e}")
+        return jsonify({'error': 'Health scoring failed'}), 500
+
+# Compliance & Privacy Endpoints
+@app.route('/api/leads/<int:lead_id>/gdpr-compliance', methods=['GET'])
+def check_gdpr_compliance(lead_id):
+    """Check GDPR compliance status"""
+    try:
+        from features.compliance_manager import compliance_manager
+        compliance_status = compliance_manager.gdpr_compliance_check(lead_id)
+        return jsonify(compliance_status)
+    
+    except Exception as e:
+        logger.error(f"GDPR compliance check error for {lead_id}: {e}")
+        return jsonify({'error': 'Compliance check failed'}), 500
+
+@app.route('/api/privacy/consent', methods=['POST'])
+def record_consent():
+    """Record privacy consent"""
+    try:
+        data = request.get_json() or {}
+        lead_id = data.get('lead_id')
+        consent_type = data.get('consent_type')
+        consent_given = data.get('consent_given')
+        
+        if not all([lead_id, consent_type, consent_given is not None]):
+            return jsonify({'error': 'lead_id, consent_type, and consent_given required'}), 400
+        
+        from features.compliance_manager import compliance_manager
+        result = compliance_manager.record_consent(lead_id, consent_type, consent_given)
+        return jsonify(result)
+    
+    except Exception as e:
+        logger.error(f"Consent recording error: {e}")
+        return jsonify({'error': 'Consent recording failed'}), 500
+
+@app.route('/api/privacy/do-not-contact', methods=['POST'])
+def add_to_do_not_contact():
+    """Add to do-not-contact list"""
+    try:
+        data = request.get_json() or {}
+        identifier = data.get('identifier')  # email or phone
+        reason = data.get('reason', 'user_request')
+        
+        if not identifier:
+            return jsonify({'error': 'identifier required'}), 400
+        
+        from features.compliance_manager import compliance_manager
+        result = compliance_manager.add_to_do_not_contact(identifier, reason)
+        return jsonify(result)
+    
+    except Exception as e:
+        logger.error(f"Do-not-contact error: {e}")
+        return jsonify({'error': 'Failed to add to do-not-contact list'}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

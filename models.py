@@ -37,6 +37,10 @@ class Lead(db.Model):
     notes = db.Column(db.Text, nullable=True)
     ai_analysis = db.Column(db.Text, nullable=True)  # Store AI analysis as JSON string
     
+    # Data quality and validation
+    last_validated = db.Column(db.DateTime, nullable=True)
+    validation_score = db.Column(db.Integer, nullable=True)  # 0-100 validation score
+    
     def __repr__(self):
         return f'<Lead {self.company_name}>'
     

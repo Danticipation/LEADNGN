@@ -1,0 +1,233 @@
+Step 1: Email Tracking System
+First, let's create the database tables for tracking:
+sql-- Email tracking tables
+CREATE TABLE sent_emails (
+    id SERIAL PRIMARY KEY,
+    lead_id INTEGER REFERENCES leads(id),
+    template_id INTEGER REFERENCES email_templates(id),
+    subject_line TEXT NOT NULL,
+    email_body TEXT NOT NULL,
+    recipient_email VARCHAR(255) NOT NULL,
+    tracking_id UUID DEFAULT gen_random_uuid(),
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    sent_by VARCHAR(255), -- User who sent it
+    campaign_type VARCHAR(100) DEFAULT 'consultant_outreach'
+);
+
+CREATE TABLE email_tracking_events (
+    id SERIAL PRIMARY KEY,
+    sent_email_id INTEGER REFERENCES sent_emails(id),
+    event_type VARCHAR(50) NOT NULL, -- 'open', 'click', 'reply', 'bounce'
+    event_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ip_address INET,
+    user_agent TEXT,
+    click_url TEXT, -- For click events
+    metadata JSONB -- Additional tracking data
+);
+
+-- Indexes for performance
+CREATE INDEX idx_tracking_events_email_id ON email_tracking_events(sent_email_id);
+CREATE INDEX idx_tracking_events_type ON email_tracking_events(event_type);
+CREATE INDEX idx_sent_emails_tracking_id ON sent_emails(tracking_id);
+Step 2: Enhanced Email Generation with Tracking
+pythonimport uuid
+from urllib.parse import urlencode
+
+def generate_consultant_email_with_tracking(lead_id, user_id=None):
+    """Generate email with tracking pixels and links"""
+    
+    # Generate base email
+    email_data = generate_consultant_email(lead_id)
+    
+    # Create tracking ID
+    tracking_id = str(uuid.uuid4())
+    
+    # Add tracking pixel (1x1 transparent image)
+    tracking_pixel = f'<img src="https://yourdomain.com/track/open/{tracking_id}" width="1" height="1" style="display:none;" />'
+    
+    # Add tracking to all links in email
+    tracked_email_body = add_tracking_to_links(email_data['email_body'], tracking_id)
+    
+    # Add tracking pixel to email body
+    tracked_email_body += f'\n\n{tracking_pixel}'
+    
+    # Store in database (don't send yet)
+    lead = get_lead_by_id(lead_id)
+    sent_email_id = store_email_for_tracking(
+        lead_id=lead_id,
+        template_id=email_data.get('template_id'),
+        subject_line=email_data['subject_options'][0],
+        email_body=tracked_email_body,
+        recipient_email=lead.email,
+        tracking_id=tracking_id,
+        sent_by=user_id
+    )
+    
+    email_data['tracking_id'] = tracking_id
+    email_data['sent_email_id'] = sent_email_id
+    email_data['email_body'] = tracked_email_body
+    
+    return email_data
+
+def add_tracking_to_links(email_body, tracking_id):
+    """Add tracking to all links in email"""
+    import re
+    
+    # Find all URLs in the email
+    url_pattern = r'https?://[^\s<>"\']*'
+    
+    def replace_url(match):
+        original_url = match.group(0)
+        # Create tracking redirect URL
+        tracking_params = urlencode({
+            'tid': tracking_id,
+            'url': original_url
+        })
+        return f'https://yourdomain.com/track/click?{tracking_params}'
+    
+    return re.sub(url_pattern, replace_url, email_body)
+
+def store_email_for_tracking(lead_id, template_id, subject_line, email_body, recipient_email, tracking_id, sent_by):
+    """Store email in tracking database"""
+    
+    query = """
+        INSERT INTO sent_emails (lead_id, template_id, subject_line, email_body, 
+                               recipient_email, tracking_id, sent_by)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        RETURNING id
+    """
+    
+    result = execute_query(query, (
+        lead_id, template_id, subject_line, email_body, 
+        recipient_email, tracking_id, sent_by
+    ))
+    
+    return result[0]['id'] if result else None
+Step 3: Tracking Endpoints
+pythonfrom flask import request, redirect, Response
+
+@app.route('/track/open/<tracking_id>')
+def track_email_open(tracking_id):
+    """Track email opens with 1x1 pixel"""
+    
+    try:
+        # Record the open event
+        record_tracking_event(
+            tracking_id=tracking_id,
+            event_type='open',
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent')
+        )
+    except Exception as e:
+        print(f"Error tracking email open: {e}")
+    
+    # Return 1x1 transparent PNG
+    pixel_data = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\xf8\x0f\x00\x00\x01\x00\x01\x00\x00\x00\x00\x00\x00'
+    
+    return Response(pixel_data, mimetype='image/png')
+
+@app.route('/track/click')
+def track_email_click():
+    """Track email clicks and redirect"""
+    
+    tracking_id = request.args.get('tid')
+    original_url = request.args.get('url')
+    
+    if not tracking_id or not original_url:
+        return "Invalid tracking link", 400
+    
+    try:
+        # Record the click event
+        record_tracking_event(
+            tracking_id=tracking_id,
+            event_type='click',
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent'),
+            click_url=original_url
+        )
+    except Exception as e:
+        print(f"Error tracking email click: {e}")
+    
+    # Redirect to original URL
+    return redirect(original_url)
+
+def record_tracking_event(tracking_id, event_type, ip_address=None, user_agent=None, click_url=None):
+    """Record tracking event in database"""
+    
+    # Get sent_email_id from tracking_id
+    query = "SELECT id FROM sent_emails WHERE tracking_id = %s"
+    result = execute_query(query, (tracking_id,))
+    
+    if not result:
+        raise ValueError(f"No email found for tracking ID: {tracking_id}")
+    
+    sent_email_id = result[0]['id']
+    
+    # Insert tracking event
+    query = """
+        INSERT INTO email_tracking_events 
+        (sent_email_id, event_type, ip_address, user_agent, click_url)
+        VALUES (%s, %s, %s, %s, %s)
+    """
+    
+    execute_query(query, (sent_email_id, event_type, ip_address, user_agent, click_url))
+Step 4: Tracking Dashboard
+pythondef get_email_tracking_stats(lead_id=None, days=30):
+    """Get email tracking statistics"""
+    
+    base_query = """
+        SELECT 
+            se.id,
+            se.subject_line,
+            se.recipient_email,
+            se.sent_at,
+            l.company_name,
+            COUNT(CASE WHEN ete.event_type = 'open' THEN 1 END) as opens,
+            COUNT(CASE WHEN ete.event_type = 'click' THEN 1 END) as clicks,
+            MAX(CASE WHEN ete.event_type = 'open' THEN ete.event_timestamp END) as last_opened
+        FROM sent_emails se
+        LEFT JOIN leads l ON se.lead_id = l.id
+        LEFT JOIN email_tracking_events ete ON se.id = ete.sent_email_id
+        WHERE se.sent_at >= NOW() - INTERVAL '%s days'
+    """
+    
+    params = [days]
+    
+    if lead_id:
+        base_query += " AND se.lead_id = %s"
+        params.append(lead_id)
+    
+    base_query += """
+        GROUP BY se.id, se.subject_line, se.recipient_email, se.sent_at, l.company_name
+        ORDER BY se.sent_at DESC
+    """
+    
+    return execute_query(base_query, params)
+
+@app.route('/api/email-tracking-stats')
+def email_tracking_stats_api():
+    """API endpoint for email tracking stats"""
+    
+    lead_id = request.args.get('lead_id', type=int)
+    days = request.args.get('days', 30, type=int)
+    
+    stats = get_email_tracking_stats(lead_id, days)
+    
+    # Calculate summary stats
+    total_sent = len(stats)
+    total_opens = sum(row['opens'] for row in stats)
+    total_clicks = sum(row['clicks'] for row in stats)
+    
+    open_rate = (total_opens / total_sent * 100) if total_sent > 0 else 0
+    click_rate = (total_clicks / total_sent * 100) if total_sent > 0 else 0
+    
+    return jsonify({
+        'summary': {
+            'total_sent': total_sent,
+            'total_opens': total_opens,
+            'total_clicks': total_clicks,
+            'open_rate': round(open_rate, 2),
+            'click_rate': round(click_rate, 2)
+        },
+        'emails': stats
+    })
