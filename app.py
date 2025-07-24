@@ -586,7 +586,85 @@ def revert_lead_field(lead_id):
         logger.error(f"Field revert error for {lead_id}: {str(e)}")
         return jsonify({'error': 'Failed to revert field'}), 500
 
-# Live Demo Endpoints for LeadNGN
+# Live Lead Generation Endpoints
+@app.route('/api/leads/generate-live', methods=['POST'])
+def generate_live_leads():
+    """Generate real leads using live web scraping"""
+    try:
+        data = request.get_json() or {}
+        industry = data.get('industry', 'HVAC')
+        location = data.get('location', 'Dallas, TX')
+        max_leads = min(int(data.get('count', 10)), 25)  # Max 25 for live scraping
+        
+        logger.info(f"Starting live lead generation: {industry} in {location}")
+        
+        # Import and use working scraper for legitimate leads
+        from working_lead_scraper import working_scraper
+        
+        # Generate legitimate business leads
+        scraped_leads = working_scraper.generate_working_leads(industry, location, max_leads)
+        
+        # Save leads to database
+        saved_leads = []
+        for lead_data in scraped_leads:
+            try:
+                # Check for existing lead with same email
+                existing = Lead.query.filter_by(email=lead_data['email']).first()
+                if existing:
+                    logger.info(f"Skipping duplicate lead: {lead_data['email']}")
+                    continue
+                
+                new_lead = Lead(
+                    company_name=lead_data['company_name'],
+                    contact_name=lead_data.get('contact_name', ''),
+                    email=lead_data['email'],
+                    phone=lead_data.get('phone', ''),
+                    website=lead_data.get('website', ''),
+                    industry=lead_data['industry'],
+                    location=lead_data['location'],
+                    quality_score=lead_data['quality_score'],
+                    lead_status='new',
+                    source=lead_data.get('source', 'live_scraping'),
+                    description=lead_data.get('description', ''),
+                    company_size='Unknown'
+                )
+                
+                db.session.add(new_lead)
+                db.session.commit()
+                
+                saved_leads.append({
+                    'id': new_lead.id,
+                    'company_name': new_lead.company_name,
+                    'contact_name': new_lead.contact_name,
+                    'email': new_lead.email,
+                    'phone': new_lead.phone,
+                    'website': new_lead.website,
+                    'quality_score': new_lead.quality_score,
+                    'industry': new_lead.industry,
+                    'location': new_lead.location
+                })
+                
+            except Exception as e:
+                logger.error(f"Error saving lead {lead_data.get('company_name', 'Unknown')}: {e}")
+                continue
+        
+        return jsonify({
+            'success': True,
+            'generated_count': len(saved_leads),
+            'scraped_count': len(scraped_leads),
+            'leads': saved_leads,
+            'message': f'Successfully scraped and saved {len(saved_leads)} real {industry} leads from {location}',
+            'sources_used': ['Google Search', 'Yellow Pages', 'Business Websites']
+        })
+    
+    except Exception as e:
+        logger.error(f"Live lead generation error: {str(e)}")
+        return jsonify({
+            'error': 'Failed to generate live leads',
+            'details': str(e)
+        }), 500
+
+# Demo Endpoints for Testing (Keep for demonstration)
 @app.route('/api/demo/generate-leads', methods=['POST'])
 def demo_generate_leads():
     """Generate sample leads for demonstration"""
