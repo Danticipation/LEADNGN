@@ -886,5 +886,60 @@ def demo_system_status():
         logger.error(f"System status error: {str(e)}")
         return jsonify({'error': 'Failed to get system status'}), 500
 
+# Advanced Features API Endpoints
+
+@app.route('/api/leads/<int:lead_id>/competitive-analysis', methods=['GET'])
+def get_competitive_analysis(lead_id):
+    """Get competitive analysis for a lead"""
+    try:
+        from features.competitive_analysis import competitive_analyzer
+        analysis = competitive_analyzer.analyze_competitors(lead_id)
+        return jsonify(analysis)
+    
+    except Exception as e:
+        logger.error(f"Competitive analysis error for lead {lead_id}: {e}")
+        return jsonify({'error': 'Failed to get competitive analysis'}), 500
+
+@app.route('/api/leads/<int:lead_id>/email-template', methods=['POST'])
+def generate_email_template(lead_id):
+    """Generate personalized email template for a lead"""
+    try:
+        data = request.get_json() or {}
+        template_type = data.get('template_type', 'introduction')
+        
+        # Get AI insights for personalization
+        ai_insights = data.get('ai_insights')
+        
+        from features.email_templates import email_template_manager
+        email_result = email_template_manager.generate_email(lead_id, template_type, ai_insights)
+        
+        # Track email generation
+        if email_result.get('success'):
+            from features.analytics_dashboard import analytics_dashboard
+            analytics_dashboard.track_email_sent(
+                lead_id, 
+                template_type, 
+                email_result['email']['subject']
+            )
+        
+        return jsonify(email_result)
+    
+    except Exception as e:
+        logger.error(f"Email template generation error for lead {lead_id}: {e}")
+        return jsonify({'error': 'Failed to generate email template'}), 500
+
+@app.route('/api/analytics/dashboard', methods=['GET'])
+def get_analytics_dashboard():
+    """Get comprehensive analytics dashboard data"""
+    try:
+        days = int(request.args.get('days', 30))
+        from features.analytics_dashboard import analytics_dashboard
+        metrics = analytics_dashboard.get_dashboard_metrics(days)
+        return jsonify(metrics)
+    
+    except Exception as e:
+        logger.error(f"Analytics dashboard error: {e}")
+        return jsonify({'error': 'Failed to get analytics data'}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

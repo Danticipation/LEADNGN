@@ -16,6 +16,12 @@
 - `lead_revalidation.py` - Automated lead quality checking and updates
 - `__init__.py` - Module initialization
 
+### `/features/` - Advanced Features
+- `competitive_analysis.py` - Market analysis and competitor intelligence
+- `email_templates.py` - Industry-specific email template system
+- `analytics_dashboard.py` - Real-time performance tracking and analytics
+- `__init__.py` - Module initialization
+
 ### `/templates/` - HTML Templates
 - `dashboard.html` - Main dashboard with premium black/gold UI
 - `leads.html` - Lead management interface
@@ -46,11 +52,14 @@
 1. **Live Lead Generation** - Real business lead scraping and generation
 2. **Premium Dashboard** - Black/gold enterprise UI with real-time stats
 3. **AI Analysis** - Comprehensive business intelligence per lead
-4. **Quality Scoring** - Automated lead quality assessment
-5. **Account Intelligence** - Corporate domain analysis and insights
-6. **Audit Trail** - Complete change tracking and history
-7. **Email Validation** - MX record validation and deliverability
-8. **Phone Intelligence** - Contact verification and enrichment
+4. **Competitive Analysis** - Market positioning and competitor intelligence
+5. **Email Templates** - Industry-specific templates with seasonal awareness
+6. **Analytics Dashboard** - Real-time performance tracking with A/B testing
+7. **Quality Scoring** - Automated lead quality assessment
+8. **Account Intelligence** - Corporate domain analysis and insights
+9. **Audit Trail** - Complete change tracking and history
+10. **Email Validation** - MX record validation and deliverability
+11. **Phone Intelligence** - Contact verification and enrichment
 
 ## Architecture Highlights
 - **Modular Design** - Clean separation of concerns
