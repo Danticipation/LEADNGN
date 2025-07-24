@@ -524,7 +524,7 @@ def get_account_hierarchy(domain):
 def get_lead_audit_history(lead_id):
     """Get complete audit history for a lead"""
     try:
-        from lead_audit import audit_manager
+        from utils.lead_audit import audit_manager
         limit = int(request.args.get('limit', 50))
         history = audit_manager.get_lead_history(lead_id, limit)
         return jsonify({
@@ -541,7 +541,7 @@ def get_lead_audit_history(lead_id):
 def get_lead_score_evolution(lead_id):
     """Get quality score evolution for a lead"""
     try:
-        from lead_audit import audit_manager
+        from utils.lead_audit import audit_manager
         evolution = audit_manager.get_quality_score_evolution(lead_id)
         return jsonify(evolution)
     
@@ -553,7 +553,7 @@ def get_lead_score_evolution(lead_id):
 def get_team_activity():
     """Get team activity summary for collaboration"""
     try:
-        from lead_audit import audit_manager
+        from utils.lead_audit import audit_manager
         days = int(request.args.get('days', 7))
         activity = audit_manager.get_team_activity_summary(days)
         return jsonify(activity)
@@ -574,7 +574,7 @@ def revert_lead_field(lead_id):
         if not field_name or not target_timestamp:
             return jsonify({'error': 'field_name and target_timestamp required'}), 400
         
-        from lead_audit import audit_manager
+        from utils.lead_audit import audit_manager
         success = audit_manager.revert_lead_field(lead_id, field_name, target_timestamp, reverted_by)
         
         if success:
@@ -598,11 +598,12 @@ def generate_live_leads():
         
         logger.info(f"Starting live lead generation: {industry} in {location}")
         
-        # Import and use working scraper for legitimate leads
-        from working_lead_scraper import working_scraper
+        # Import consolidated scraper
+        from scrapers import LeadScraper
         
         # Generate legitimate business leads
-        scraped_leads = working_scraper.generate_working_leads(industry, location, max_leads)
+        scraper = LeadScraper()
+        scraped_leads = scraper.generate_leads(industry, location, max_leads)
         
         # Save leads to database
         saved_leads = []
