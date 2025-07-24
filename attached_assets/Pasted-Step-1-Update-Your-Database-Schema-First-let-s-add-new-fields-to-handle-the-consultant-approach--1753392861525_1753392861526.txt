@@ -1,0 +1,521 @@
+Step 1: Update Your Database Schema
+First, let's add new fields to handle the consultant approach:
+sql
+-- Add new columns to your email_templates table
+ALTER TABLE email_templates ADD COLUMN positioning_type VARCHAR(50) DEFAULT 'consultant';
+ALTER TABLE email_templates ADD COLUMN business_size_target VARCHAR(50);
+ALTER TABLE email_templates ADD COLUMN setup_complexity VARCHAR(50);
+
+-- Create a new table for business assessment logic
+CREATE TABLE business_assessment_rules (
+    id SERIAL PRIMARY KEY,
+    assessment_type VARCHAR(100) NOT NULL, -- 'small_basic', 'established', 'enterprise'
+    setup_time VARCHAR(50) NOT NULL,
+    recommendation_focus TEXT NOT NULL,
+    positioning_message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+Step 2: Insert the Assessment Rules
+sql
+INSERT INTO business_assessment_rules (assessment_type, setup_time, recommendation_focus, positioning_message) VALUES
+('small_basic', '30-minute setup call', 'simple but powerful system that grows with you', 'complete business upgrade'),
+('established', '45-minute consultation call', 'professional system tailored to your needs', 'streamlined automation solution'), 
+('enterprise', '60-minute setup call', 'enterprise-level system with full integration', 'comprehensive business automation');
+Step 3: Insert Your New Template Variations
+sql
+-- Small/Basic Business Template
+INSERT INTO email_templates (name, industry, season, template_type, positioning_type, business_size_target, subject_lines, email_body) VALUES (
+'HVAC Summer Consultant - Small Business',
+'HVAC', 
+'summer',
+'introduction',
+'consultant',
+'small_basic',
+ARRAY[
+    'Quick question about {company_name}''s customer tracking',
+    '{contact_name} - upgrade your business systems this weekend?',
+    'From spreadsheets to professional: 30 minutes'
+],
+'Hi {contact_name},
+
+Phoenix hitting 115°F - I bet you''re getting slammed with emergency calls at {company_name}.
+
+{ai_pain_point_reference}
+
+Quick question: What''s your current system for tracking customers and appointments? Spreadsheet? Notebook? Just memory?
+
+Here''s what I''m thinking: Let''s get you set up with a complete system that runs your business automatically. AI handles calls, books appointments, sends follow-ups, tracks everything.
+
+I''ll recommend exactly what works best for a business your size - nothing complicated, just professional and automatic.
+
+{setup_time} and you''re running like a much bigger company.
+
+Worth upgrading this weekend?
+
+Best,
+{your_name}
+
+P.S. Going from "hoping you don''t miss calls" to "capturing everything automatically" is a game-changer.'
+);
+
+-- Established Business Template  
+INSERT INTO email_templates (name, industry, season, template_type, positioning_type, business_size_target, subject_lines, email_body) VALUES (
+'HVAC Summer Consultant - Established',
+'HVAC',
+'summer', 
+'introduction',
+'consultant',
+'established',
+ARRAY[
+    '{contact_name} - making {company_name} run automatically',
+    'HVAC automation consultation for established businesses',
+    'Phoenix heat wave: time to automate {company_name}?'
+],
+'Hi {contact_name},
+
+With Phoenix at 115°F, {company_name} is probably handling more calls than your current system can manage efficiently.
+
+{ai_pain_point_reference}
+
+I specialize in taking established HVAC businesses and making them run completely automatically. Whether you need better system integration, automated follow-ups, or just want to capture every call - I can design the right solution.
+
+{setup_time} where I''ll:
+✓ Assess your current setup
+✓ Recommend the best automation approach  
+✓ Get your AI agent live for weekend testing
+✓ Show you exactly how much more efficient you could be
+
+Free trial to prove it works before you commit to anything.
+
+Worth a consultation this week?
+
+Best,
+{your_name}
+
+P.S. Most established businesses are surprised at how much manual work they''re still doing unnecessarily.'
+);
+Step 4: Create the Business Assessment Function
+python
+def assess_business_for_consultant_approach(lead_id):
+    """Assess business and recommend approach"""
+    
+    # Get lead and AI analysis
+    lead = get_lead_by_id(lead_id)
+    ai_data = json.loads(lead.ai_analysis) if lead.ai_analysis else {}
+    
+    # Assessment logic
+    def determine_business_type(ai_data):
+        employee_indicators = ai_data.get('employee_count', 'small')
+        tech_indicators = ai_data.get('technology_adoption', 'basic')
+        revenue_indicators = ai_data.get('revenue_assessment', 'small')
+        website_quality = ai_data.get('website_quality_score', 0)
+        
+        # Enterprise indicators
+        if (employee_indicators == 'large' or 
+            revenue_indicators == 'high' or 
+            website_quality > 80):
+            return 'enterprise'
+        
+        # Established business indicators  
+        elif (employee_indicators == 'medium' or
+              tech_indicators in ['medium', 'high'] or
+              website_quality > 60):
+            return 'established'
+        
+        # Default to small/basic
+        else:
+            return 'small_basic'
+    
+    business_type = determine_business_type(ai_data)
+    
+    # Get assessment rules from database
+    query = "SELECT * FROM business_assessment_rules WHERE assessment_type = %s"
+    assessment_rule = execute_query(query, (business_type,))
+    
+    return {
+        'business_type': business_type,
+        'setup_time': assessment_rule['setup_time'],
+        'recommendation_focus': assessment_rule['recommendation_focus'],
+        'positioning_message': assessment_rule['positioning_message'],
+        'template_target': business_type
+    }
+Step 5: Enhanced Personalization Function
+python
+def generate_consultant_email(lead_id):
+    """Generate consultant-positioned email"""
+    
+    # Get lead data
+    lead = get_lead_by_id(lead_id)
+    ai_data = json.loads(lead.ai_analysis) if lead.ai_analysis else {}
+    
+    # Assess business type
+    assessment = assess_business_for_consultant_approach(lead_id)
+    
+    # Get appropriate template
+    query = """
+        SELECT * FROM email_templates 
+        WHERE industry = %s 
+        AND positioning_type = 'consultant'
+        AND business_size_target = %s
+        AND season = %s
+    """
+    template = execute_query(query, ('HVAC', assessment['business_type'], 'summer'))
+    
+    # Create personalization data
+    personalization = {
+        'contact_name': lead.contact_name or 'there',
+        'company_name': lead.company_name,
+        'ai_pain_point_reference': create_consultant_pain_point_reference(ai_data),
+        'setup_time': assessment['setup_time'],
+        'your_name': 'Your Name'  # Make this configurable
+    }
+    
+    # Generate email
+    email_body = template['email_body'].format(**personalization)
+    subject_options = [subject.format(**personalization) for subject in template['subject_lines']]
+    
+    return {
+        'subject_options': subject_options,
+        'email_body': email_body,
+        'business_assessment': assessment,
+        'personalization_used': personalization
+    }
+Step 6: Consultant-Specific Pain Point References
+python
+def create_consultant_pain_point_reference(ai_data):
+    """Create consultant-style pain point references"""
+    
+    pain_points = ai_data.get('pain_points', [])
+    business_type = ai_data.get('business_type', '')
+    
+    # Consultant language focuses on business efficiency, not just problems
+    consultant_references = {
+        'call_management': "I noticed you might be handling calls manually, which gets overwhelming during peak times like this.",
+        'scheduling': "It looks like appointment scheduling could be more streamlined, especially when you're this busy.",
+        'customer_tracking': "I see customer information management might be taking more time than it should.",
+        'follow_up': "It seems like staying on top of follow-ups gets challenging when you're handling emergency calls all day.",
+        'general': "I can see there are some operational areas where automation could make a huge difference."
+    }
+    
+    # Match pain points to consultant language
+    for pain_point in pain_points:
+        if any(word in pain_point.lower() for word in ['call', 'phone', 'answer']):
+            return consultant_references['call_management']
+        elif any(word in pain_point.lower() for word in ['schedule', 'appointment', 'booking']):
+            return consultant_references['scheduling']
+        elif any(word in pain_point.lower() for word in ['customer', 'client', 'track']):
+            return consultant_references['customer_tracking']
+        elif any(word in pain_point.lower() for word in ['follow', 'communication']):
+            return consultant_references['follow_up']
+    
+    return consultant_references['general']
+Step 7: Add UI Button to Your Lead Detail Page
+Add this to your lead detail HTML template:
+html
+<div class="mt-4">
+    <button id="generate-consultant-email" class="btn btn-primary">
+        Generate Consultant Outreach Email
+    </button>
+</div>
+
+<div id="consultant-email-result" class="mt-4" style="display: none;">
+    <h5>Generated Email:</h5>
+    <div class="form-group">
+        <label>Subject Line Options:</label>
+        <select id="subject-options" class="form-control">
+            <!-- Options populated by JavaScript -->
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Email Body:</label>
+        <textarea id="email-body" class="form-control" rows="15"></textarea>
+    </div>
+    <div class="form-group">
+        <small class="text-muted">Business Assessment: <span id="business-type"></span></small>
+    </div>
+</div>
+ Here's the JavaScript to make everything work together.
+Step 8: JavaScript for the Frontend
+Add this JavaScript to your lead detail page:
+javascript
+// Generate Consultant Email Button Handler
+document.getElementById('generate-consultant-email').addEventListener('click', function() {
+    const leadId = getCurrentLeadId(); // Your existing function to get lead ID
+    const button = this;
+    
+    // Show loading state
+    button.disabled = true;
+    button.textContent = 'Generating Email...';
+    
+    // Make API call to generate email
+    fetch('/api/generate-consultant-email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            lead_id: leadId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayGeneratedEmail(data.email_data);
+        } else {
+            alert('Error generating email: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error generating email. Please try again.');
+    })
+    .finally(() => {
+        // Reset button
+        button.disabled = false;
+        button.textContent = 'Generate Consultant Outreach Email';
+    });
+});
+
+function displayGeneratedEmail(emailData) {
+    // Show the result div
+    document.getElementById('consultant-email-result').style.display = 'block';
+    
+    // Populate subject line options
+    const subjectSelect = document.getElementById('subject-options');
+    subjectSelect.innerHTML = '';
+    emailData.subject_options.forEach((subject, index) => {
+        const option = document.createElement('option');
+        option.value = subject;
+        option.textContent = subject;
+        if (index === 0) option.selected = true; // Select first option
+        subjectSelect.appendChild(option);
+    });
+    
+    // Populate email body
+    document.getElementById('email-body').value = emailData.email_body;
+    
+    // Show business assessment
+    document.getElementById('business-type').textContent = 
+        emailData.business_assessment.business_type + ' (' + emailData.business_assessment.setup_time + ')';
+    
+    // Scroll to result
+    document.getElementById('consultant-email-result').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Copy email to clipboard functionality
+function addCopyButtons() {
+    const emailBody = document.getElementById('email-body');
+    const copyButton = document.createElement('button');
+    copyButton.className = 'btn btn-sm btn-outline-secondary mt-2';
+    copyButton.textContent = 'Copy Email';
+    copyButton.addEventListener('click', function() {
+        const subject = document.getElementById('subject-options').value;
+        const body = emailBody.value;
+        const fullEmail = `Subject: ${subject}\n\n${body}`;
+        
+        navigator.clipboard.writeText(fullEmail).then(() => {
+            copyButton.textContent = 'Copied!';
+            setTimeout(() => {
+                copyButton.textContent = 'Copy Email';
+            }, 2000);
+        });
+    });
+    
+    emailBody.parentNode.appendChild(copyButton);
+}
+
+// Call this after displaying the email
+function displayGeneratedEmail(emailData) {
+    // ... existing code ...
+    
+    // Add copy button if it doesn't exist
+    if (!document.querySelector('.btn:contains("Copy Email")')) {
+        addCopyButtons();
+    }
+}
+Step 9: Flask API Endpoint
+Add this to your Flask application:
+python
+from flask import request, jsonify
+
+@app.route('/api/generate-consultant-email', methods=['POST'])
+def generate_consultant_email_api():
+    try:
+        data = request.get_json()
+        lead_id = data.get('lead_id')
+        
+        if not lead_id:
+            return jsonify({'success': False, 'error': 'Lead ID required'})
+        
+        # Generate the email using our function
+        email_data = generate_consultant_email(lead_id)
+        
+        return jsonify({
+            'success': True,
+            'email_data': email_data
+        })
+        
+    except Exception as e:
+        print(f"Error generating consultant email: {str(e)}")
+        return jsonify({
+            'success': False, 
+            'error': 'Internal server error'
+        })
+
+# Helper function to get current lead ID (if you don't have this)
+def getCurrentLeadId():
+    # This depends on how your current system works
+    # You might get it from URL params, session, or DOM data
+    pass
+Step 10: Enhanced HTML Template with Better Styling
+Update your HTML to include better styling:
+html
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">AI-Powered Consultant Outreach</h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted">Generate a personalized consultant-style email based on this lead's business analysis.</p>
+        
+        <button id="generate-consultant-email" class="btn btn-success btn-lg">
+            <i class="fas fa-robot"></i> Generate Consultant Outreach Email
+        </button>
+        
+        <div id="consultant-email-result" class="mt-4" style="display: none;">
+            <div class="alert alert-success">
+                <strong>Email Generated Successfully!</strong> Review and customize as needed.
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label><strong>Subject Line Options:</strong></label>
+                        <select id="subject-options" class="form-control">
+                            <!-- Options populated by JavaScript -->
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label><strong>Business Assessment:</strong></label>
+                        <div class="alert alert-info">
+                            <small>
+                                Type: <span id="business-type"></span><br>
+                                Approach: Professional consultation positioning
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><strong>Email Body:</strong></label>
+                <textarea id="email-body" class="form-control" rows="18" style="font-family: monospace;"></textarea>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button id="copy-email" class="btn btn-outline-primary">
+                    <i class="fas fa-copy"></i> Copy Email
+                </button>
+                <button id="edit-email" class="btn btn-outline-secondary">
+                    <i class="fas fa-edit"></i> Customize
+                </button>
+                <button id="regenerate-email" class="btn btn-outline-warning">
+                    <i class="fas fa-refresh"></i> Regenerate
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+Step 11: Add Error Handling and Validation
+python
+def generate_consultant_email(lead_id):
+    """Generate consultant-positioned email with error handling"""
+    
+    try:
+        # Validate lead exists
+        lead = get_lead_by_id(lead_id)
+        if not lead:
+            raise ValueError(f"Lead {lead_id} not found")
+        
+        # Check if AI analysis exists
+        if not lead.ai_analysis:
+            raise ValueError("Lead requires AI analysis before generating email")
+        
+        ai_data = json.loads(lead.ai_analysis)
+        
+        # Assess business type
+        assessment = assess_business_for_consultant_approach(lead_id)
+        
+        # Get appropriate template
+        query = """
+            SELECT * FROM email_templates 
+            WHERE industry = %s 
+            AND positioning_type = 'consultant'
+            AND business_size_target = %s
+            AND season = %s
+            LIMIT 1
+        """
+        result = execute_query(query, ('HVAC', assessment['business_type'], 'summer'))
+        
+        if not result:
+            raise ValueError(f"No template found for {assessment['business_type']} business type")
+        
+        template = result[0]  # Assuming execute_query returns list of dicts
+        
+        # Create personalization data
+        personalization = {
+            'contact_name': lead.contact_name or 'there',
+            'company_name': lead.company_name or 'your company',
+            'ai_pain_point_reference': create_consultant_pain_point_reference(ai_data),
+            'setup_time': assessment['setup_time'],
+            'your_name': 'Your Name'  # Make this configurable later
+        }
+        
+        # Generate email with error handling for missing placeholders
+        try:
+            email_body = template['email_body'].format(**personalization)
+            subject_options = [subject.format(**personalization) for subject in template['subject_lines']]
+        except KeyError as e:
+            raise ValueError(f"Template formatting error: missing placeholder {e}")
+        
+        return {
+            'subject_options': subject_options,
+            'email_body': email_body,
+            'business_assessment': assessment,
+            'personalization_used': personalization,
+            'template_used': template['name']
+        }
+        
+    except Exception as e:
+        print(f"Error in generate_consultant_email: {str(e)}")
+        raise
+Step 12: Test the Complete System
+Add this test function:
+python
+def test_consultant_email_generation(lead_id):
+    """Test the complete email generation system"""
+    
+    try:
+        print(f"Testing email generation for lead {lead_id}...")
+        
+        # Generate email
+        result = generate_consultant_email(lead_id)
+        
+        print("SUCCESS!")
+        print(f"Template used: {result['template_used']}")
+        print(f"Business type: {result['business_assessment']['business_type']}")
+        print(f"Subject options: {len(result['subject_options'])}")
+        print("\nFirst subject line:")
+        print(result['subject_options'][0])
+        print("\nEmail body preview (first 200 chars):")
+        print(result['email_body'][:200] + "...")
+        
+        return True
+        
+    except Exception as e:
+        print(f"ERROR: {str(e)}")
+        return False
+
+# Run this to test with your Elite HVAC Services lead
+# test_consultant_email_generation(1)  # Replace with actual lead ID

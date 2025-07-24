@@ -941,5 +941,47 @@ def get_analytics_dashboard():
         logger.error(f"Analytics dashboard error: {e}")
         return jsonify({'error': 'Failed to get analytics data'}), 500
 
+@app.route('/api/leads/<int:lead_id>/consultant-assessment', methods=['GET'])
+def get_consultant_assessment(lead_id):
+    """Get business assessment for consultant approach"""
+    try:
+        from features.consultant_approach import consultant_approach
+        assessment = consultant_approach.assess_business_for_consultant_approach(lead_id)
+        return jsonify(assessment)
+    
+    except Exception as e:
+        logger.error(f"Consultant assessment error for lead {lead_id}: {e}")
+        return jsonify({'error': 'Failed to get consultant assessment'}), 500
+
+@app.route('/api/generate-consultant-email', methods=['POST'])
+def generate_consultant_email():
+    """Generate consultant-positioned email"""
+    try:
+        data = request.get_json() or {}
+        lead_id = data.get('lead_id')
+        template_type = data.get('template_type', 'introduction')
+        
+        if not lead_id:
+            return jsonify({'error': 'lead_id required'}), 400
+        
+        from features.consultant_approach import consultant_approach
+        email_result = consultant_approach.generate_consultant_email(lead_id, template_type)
+        
+        # Track email generation in analytics
+        if email_result.get('success'):
+            from features.analytics_dashboard import analytics_dashboard
+            email_data = email_result['email_data']
+            analytics_dashboard.track_email_sent(
+                lead_id,
+                f"consultant_{template_type}",
+                email_data['subject_options'][0]
+            )
+        
+        return jsonify(email_result)
+    
+    except Exception as e:
+        logger.error(f"Consultant email generation error: {e}")
+        return jsonify({'error': 'Failed to generate consultant email'}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

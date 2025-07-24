@@ -35,6 +35,7 @@ class Lead(db.Model):
     # Tags and notes
     tags = db.Column(db.Text, default='[]')  # JSON array of tags
     notes = db.Column(db.Text, nullable=True)
+    ai_analysis = db.Column(db.Text, nullable=True)  # Store AI analysis as JSON string
     
     def __repr__(self):
         return f'<Lead {self.company_name}>'

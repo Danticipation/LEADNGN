@@ -41,12 +41,13 @@ LeadNGN is a sophisticated enterprise-grade lead generation and management platf
 4. **Competitive Analysis** - Market positioning, competitor insights, opportunities
 5. **Industry-Specific Email Templates** - HVAC, Dental, Legal with seasonal awareness
 6. **Real-Time Analytics Dashboard** - Email performance, conversion tracking, A/B testing
-7. Account-based intelligence with corporate domain analysis
-8. Email deliverability system with MX validation
-9. Phone intelligence with Twilio integration
-10. Auto-revalidation workflows
-11. Real-time notifications (Slack integration ready)
-12. Lead audit trail with team collaboration
+7. **Consultant Approach System** - Business assessment, professional positioning, strategic outreach
+8. Account-based intelligence with corporate domain analysis
+9. Email deliverability system with MX validation
+10. Phone intelligence with Twilio integration
+11. Auto-revalidation workflows
+12. Real-time notifications (Slack integration ready)
+13. Lead audit trail with team collaboration
 
 ## Next Steps
 - Continue enhancing LeadNGN platform capabilities
