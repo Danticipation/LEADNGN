@@ -1,0 +1,132 @@
+{
+  "report": {
+    "total": 17,
+    "passed": 9,
+    "failed": 6,
+    "warnings": 2,
+    "success_rate": 52.94117647058824,
+    "status": "CRITICAL"
+  },
+  "detailed_results": [
+    {
+      "test": "Dashboard Stats API",
+      "status": "PASS",
+      "timestamp": "2025-07-25T14:52:11.619175",
+      "details": "Status: 200",
+      "error": null
+    },
+    {
+      "test": "Leads List API",
+      "status": "FAIL",
+      "timestamp": "2025-07-25T14:52:11.624595",
+      "details": "Status: 404",
+      "error": null
+    },
+    {
+      "test": "Lead Details API",
+      "status": "PASS",
+      "timestamp": "2025-07-25T14:52:11.796272",
+      "details": "Status: 200",
+      "error": null
+    },
+    {
+      "test": "Lead Health Score API",
+      "status": "PASS",
+      "timestamp": "2025-07-25T14:52:13.215789",
+      "details": "Status: 200",
+      "error": null
+    },
+    {
+      "test": "OpenAI Lead Analysis",
+      "status": "FAIL",
+      "timestamp": "2025-07-25T14:52:13.219685",
+      "details": "Status: 404",
+      "error": null
+    },
+    {
+      "test": "Ollama Connection Test",
+      "status": "PASS",
+      "timestamp": "2025-07-25T14:52:13.271991",
+      "details": "Status: 200",
+      "error": null
+    },
+    {
+      "test": "Ollama Lead Analysis",
+      "status": "PASS",
+      "timestamp": "2025-07-25T14:52:13.485561",
+      "details": "Status: 200",
+      "error": null
+    },
+    {
+      "test": "AI Provider Comparison",
+      "status": "PASS",
+      "timestamp": "2025-07-25T14:52:13.653600",
+      "details": "Status: 200",
+      "error": null
+    },
+    {
+      "test": "Competitive Analysis",
+      "status": "FAIL",
+      "timestamp": "2025-07-25T14:52:13.657627",
+      "details": "Status: 404",
+      "error": null
+    },
+    {
+      "test": "Email Template Generation",
+      "status": "FAIL",
+      "timestamp": "2025-07-25T14:52:13.660893",
+      "details": "Status: 404",
+      "error": null
+    },
+    {
+      "test": "Consultant Email Generation",
+      "status": "PASS",
+      "timestamp": "2025-07-25T14:52:13.825173",
+      "details": "Status: 200",
+      "error": null
+    },
+    {
+      "test": "Analytics Dashboard",
+      "status": "WARN",
+      "timestamp": "2025-07-25T14:52:14.027667",
+      "details": "Missing keys: ['metrics', 'charts']",
+      "error": null
+    },
+    {
+      "test": "Email Tracking Stats",
+      "status": "PASS",
+      "timestamp": "2025-07-25T14:52:14.423115",
+      "details": "Status: 200",
+      "error": null
+    },
+    {
+      "test": "Lead Email Performance",
+      "status": "WARN",
+      "timestamp": "2025-07-25T14:52:14.830532",
+      "details": "Missing keys: ['performance', 'timeline']",
+      "error": null
+    },
+    {
+      "test": "GDPR Compliance Check",
+      "status": "PASS",
+      "timestamp": "2025-07-25T14:52:14.993310",
+      "details": "Status: 200",
+      "error": null
+    },
+    {
+      "test": "Email Validation",
+      "status": "FAIL",
+      "timestamp": "2025-07-25T14:52:14.997080",
+      "details": "Status: 404",
+      "error": null
+    },
+    {
+      "test": "Bulk Operations",
+      "status": "FAIL",
+      "timestamp": "2025-07-25T14:52:15.001334",
+      "details": "Status: 404",
+      "error": null
+    }
+  ],
+  "timestamp": "2025-07-25T14:52:15.001809"
+}

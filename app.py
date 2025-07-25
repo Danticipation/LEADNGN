@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify
@@ -1327,6 +1328,38 @@ def generate_consultant_email_ollama_api():
     except Exception as e:
         logger.error(f"Ollama email generation error: {e}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/leads/<int:lead_id>')
+def get_lead(lead_id):
+    """Get detailed information for a specific lead"""
+    try:
+        lead = Lead.query.get_or_404(lead_id)
+        
+        lead_data = {
+            'id': lead.id,
+            'company_name': lead.company_name,
+            'contact_name': lead.contact_name,
+            'email': lead.email,
+            'phone': lead.phone,
+            'website': lead.website,
+            'industry': lead.industry,
+            'location': lead.location,
+            'description': lead.description,
+            'quality_score': lead.quality_score,
+            'status': lead.lead_status,
+            'tags': lead.tags,
+            'created_at': lead.created_at.isoformat() if lead.created_at else None,
+            'updated_at': lead.updated_at.isoformat() if lead.updated_at else None,
+            'ai_analysis': json.loads(lead.ai_analysis) if lead.ai_analysis else None
+        }
+        
+        return jsonify(lead_data)
+    
+    except Exception as e:
+        logger.error(f"Error getting lead {lead_id}: {e}")
+        return jsonify({'error': 'Lead not found'}), 404
+
+
 
 @app.route('/api/ai-provider-comparison/<int:lead_id>', methods=['GET'])
 def ai_provider_comparison(lead_id):
