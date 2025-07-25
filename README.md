@@ -1,11 +1,11 @@
-# LeadNGN - AI-Powered Lead Generation & Management Platform
+# LeadNgN - AI-Powered Lead Generation & Management Platform
 
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![Flask](https://img.shields.io/badge/flask-3.0+-green.svg)](https://flask.palletsprojects.com)
 [![OpenAI](https://img.shields.io/badge/openai-gpt--4o-orange.svg)](https://openai.com)
 [![PostgreSQL](https://img.shields.io/badge/postgresql-15+-blue.svg)](https://postgresql.org)
 
-LeadNGN is an advanced, **production-ready** lead generation and management platform that combines automated web scraping with AI-powered business intelligence. The system targets high-value local service businesses (HVAC, Dental, Legal) and provides comprehensive lead analysis using dual AI providers (OpenAI GPT-4o + local Ollama/Mistral 7B) for intelligent insights and personalized outreach generation.
+LeadNgN is an advanced, **production-ready** lead generation and management platform that combines automated web scraping with AI-powered business intelligence. The system targets high-value local service businesses (HVAC, Dental, Legal) and provides comprehensive lead analysis using dual AI providers (OpenAI GPT-4o + local Ollama/Mistral 7B) for intelligent insights and personalized outreach generation.
 
 ## 🎯 **CURRENT STATUS: OPERATIONAL** 
 - ✅ **Live System**: 20 legitimate business leads with verified contact information
@@ -14,7 +14,7 @@ LeadNGN is an advanced, **production-ready** lead generation and management plat
 - ✅ **Enterprise Features**: Email tracking, competitive analysis, GDPR compliance
 - ✅ **Database**: PostgreSQL operational with comprehensive lead management schema
 
-## 🔑 Why LeadNGN?
+## 🔑 Why LeadNgN?
 
 ✅ **Save 2+ hours per lead** with intelligent research and automated analysis  
 📈 **Improve response rates by 40%** with personalized, context-aware outreach  

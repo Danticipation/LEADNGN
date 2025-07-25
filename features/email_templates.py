@@ -1,5 +1,5 @@
 """
-Industry-Specific Email Templates for LeadNGN
+Industry-Specific Email Templates for LeadNgN
 Smart templates that adapt to lead insights and seasonal factors
 """
 

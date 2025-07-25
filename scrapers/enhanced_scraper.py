@@ -1,5 +1,5 @@
 """
-Enhanced Lead Scraper for LeadNGN
+Enhanced Lead Scraper for LeadNgN
 Advanced web scraping with multiple data sources and intelligent quality scoring
 """
 

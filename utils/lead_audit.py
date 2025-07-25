@@ -1,5 +1,5 @@
 """
-Lead Audit System for LeadNGN
+Lead Audit System for LeadNgN
 Tracks changes and provides audit trail functionality
 """
 

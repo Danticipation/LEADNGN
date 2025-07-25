@@ -1,5 +1,5 @@
 """
-Consultant Approach Email System for LeadNGN
+Consultant Approach Email System for LeadNgN
 Positions outreach as business consulting rather than sales
 """
 

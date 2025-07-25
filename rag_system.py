@@ -1,5 +1,5 @@
 """
-RAG (Retrieval-Augmented Generation) System for LeadNGN
+RAG (Retrieval-Augmented Generation) System for LeadNgN
 Provides intelligent lead insights, company research, and personalized outreach
 """
 import os

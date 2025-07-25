@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-LeadNGN System Verification
+LeadNgN System Verification
 Comprehensive testing of all system components and connections
 """
 

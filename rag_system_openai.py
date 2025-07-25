@@ -1,5 +1,5 @@
 """
-RAG (Retrieval-Augmented Generation) System for LeadNGN using OpenAI
+RAG (Retrieval-Augmented Generation) System for LeadNgN using OpenAI
 Provides intelligent lead insights, company research, and personalized outreach
 """
 

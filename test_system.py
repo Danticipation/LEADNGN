@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script for LeadNGN system with real lead scraping and AI analysis
+Test script for LeadNgN system with real lead scraping and AI analysis
 """
 
 import sys

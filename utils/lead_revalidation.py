@@ -1,5 +1,5 @@
 """
-Lead Revalidation System for LeadNGN
+Lead Revalidation System for LeadNgN
 Handles automated lead quality checking and updates
 """
 

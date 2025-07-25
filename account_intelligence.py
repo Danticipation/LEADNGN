@@ -1,5 +1,5 @@
 """
-Account-Based Intelligence System for LeadNGN
+Account-Based Intelligence System for LeadNgN
 Groups leads by corporate domain and tracks intent clusters for enterprise sales
 """
 

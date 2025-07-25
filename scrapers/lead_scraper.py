@@ -1,5 +1,5 @@
 """
-Consolidated Lead Scraper for LeadNGN
+Consolidated Lead Scraper for LeadNgN
 Production-ready lead generation from legitimate business sources
 """
 

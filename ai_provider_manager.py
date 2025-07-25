@@ -1,5 +1,5 @@
 """
-AI Provider Manager for LeadNGN
+AI Provider Manager for LeadNgN
 Supports both OpenAI and Local LLM (Ollama) with automatic fallback
 """
 

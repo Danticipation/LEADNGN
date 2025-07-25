@@ -1,4 +1,4 @@
-# LeadNGN Project Structure
+# LeadNgN Project Structure
 
 ## Core Application Files
 - `main.py` - Application entry point

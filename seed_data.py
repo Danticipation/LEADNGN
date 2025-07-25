@@ -1,5 +1,5 @@
 """
-Seed script to populate LeadNGN with sample lead data
+Seed script to populate LeadNgN with sample lead data
 """
 import random
 from datetime import datetime, timedelta

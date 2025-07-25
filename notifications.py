@@ -1,5 +1,5 @@
 """
-Real-Time Notifications and Alerts System for LeadNGN
+Real-Time Notifications and Alerts System for LeadNgN
 Provides instant alerts for high-value lead discoveries and campaign milestones
 """
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class NotificationManager:
-    """Manages real-time notifications and alerts for LeadNGN"""
+    """Manages real-time notifications and alerts for LeadNgN"""
     
     def __init__(self):
         self.slack_webhook_url = os.environ.get('SLACK_WEBHOOK_URL')

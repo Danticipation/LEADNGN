@@ -1,5 +1,5 @@
 """
-Phone and Voice Lead Integration for LeadNGN
+Phone and Voice Lead Integration for LeadNgN
 Supports Twilio, webhook integrations, and voice-first lead management
 """
 

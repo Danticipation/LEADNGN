@@ -1,5 +1,5 @@
 """
-Enhanced Scraping Integration for LeadNGN
+Enhanced Scraping Integration for LeadNgN
 Integrates enhanced scraping with existing system
 """
 

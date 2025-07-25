@@ -1,5 +1,5 @@
 """
-Compliance & Ethics Management for LeadNGN
+Compliance & Ethics Management for LeadNgN
 GDPR/CCPA compliance, opt-out management, and ethical scraping practices
 """
 

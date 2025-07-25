@@ -1,5 +1,5 @@
 """
-Email Deliverability and Validation System for LeadNGN
+Email Deliverability and Validation System for LeadNgN
 Ensures high deliverability rates for outreach campaigns
 """
 

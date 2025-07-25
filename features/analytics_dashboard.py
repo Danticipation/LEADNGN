@@ -1,5 +1,5 @@
 """
-Real-Time Analytics Dashboard for LeadNGN
+Real-Time Analytics Dashboard for LeadNgN
 Tracks email performance, response rates, and conversion metrics
 """
 

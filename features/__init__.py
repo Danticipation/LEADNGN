@@ -1,5 +1,5 @@
 """
-Advanced Features for LeadNGN
+Advanced Features for LeadNgN
 Competitive analysis, email templates, and analytics
 """
 

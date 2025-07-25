@@ -1,5 +1,5 @@
 """
-Utility modules for LeadNGN
+Utility modules for LeadNgN
 """
 
 from .lead_audit import LeadAuditManager

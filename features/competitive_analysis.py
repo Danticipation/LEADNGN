@@ -1,5 +1,5 @@
 """
-Competitive Analysis Feature for LeadNGN
+Competitive Analysis Feature for LeadNgN
 Identifies competitors and analyzes market positioning
 """
 

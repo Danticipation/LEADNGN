@@ -1,5 +1,5 @@
 """
-Lead Scraping Module for LeadNGN
+Lead Scraping Module for LeadNgN
 Consolidated scraping functionality
 """
 

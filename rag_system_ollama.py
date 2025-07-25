@@ -1,5 +1,5 @@
 """
-RAG (Retrieval-Augmented Generation) System for LeadNGN using Local Ollama
+RAG (Retrieval-Augmented Generation) System for LeadNgN using Local Ollama
 Provides intelligent lead insights, company research, and personalized outreach
 """
 

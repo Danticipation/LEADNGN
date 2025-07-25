@@ -1,5 +1,5 @@
 """
-Data Enrichment Module for LeadNGN
+Data Enrichment Module for LeadNgN
 Advanced lead data validation and enhancement capabilities
 """
 

@@ -256,7 +256,7 @@ LeadNGN is an AI-powered lead generation and management platform that combines a
 
 ## 🚀 Getting Started
 
-1. **Access the Application**: Navigate to the LeadNGN dashboard
+1. **Access the Application**: Navigate to the LeadNgN dashboard
 2. **Explore Existing Leads**: Review the test Elite HVAC Services lead
 3. **Generate AI Insights**: Click "Generate AI Insights" for intelligent analysis
 4. **Create Outreach**: Use "Generate Outreach" for personalized emails
@@ -273,4 +273,4 @@ LeadNGN is an AI-powered lead generation and management platform that combines a
 
 ---
 
-**LeadNGN represents the future of intelligent lead generation - combining the power of AI with comprehensive business intelligence to drive sales success.**
+**LeadNgN represents the future of intelligent lead generation - combining the power of AI with comprehensive business intelligence to drive sales success.**
