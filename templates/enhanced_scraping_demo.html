@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Scraping Demo - LeadNGN</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <style>
+        .enhancement-card {
+            border-left: 4px solid var(--bs-warning);
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));
+            transition: all 0.3s ease;
+        }
+        .enhancement-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
+        }
+        .quality-score {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        .loading-spinner {
+            display: none;
+        }
+        .progress-enhanced {
+            height: 8px;
+            background: linear-gradient(90deg, var(--bs-warning), var(--bs-success));
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <!-- Header -->
+                <div class="card mb-4 border-warning">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="mb-1 text-warning">🚀 Enhanced Scraping Capabilities</h2>
+                                <p class="mb-0 text-light">Advanced multi-source lead generation with AI-powered validation</p>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-success fs-6">Version 2.0</span>
+                                <small class="d-block text-muted mt-1">Production Ready</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhancement Features -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card enhancement-card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-warning">🎯 Multi-Source Collection</h5>
+                                <ul class="list-unstyled">
+                                    <li><i class="text-success">✓</i> Google Business Listings</li>
+                                    <li><i class="text-success">✓</i> Business Directories</li>
+                                    <li><i class="text-success">✓</i> Industry-Specific Databases</li>
+                                    <li><i class="text-success">✓</i> Duplicate Prevention</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card enhancement-card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-warning">🔍 Advanced Validation</h5>
+                                <ul class="list-unstyled">
+                                    <li><i class="text-success">✓</i> Email Deliverability Checking</li>
+                                    <li><i class="text-success">✓</i> Business Legitimacy Scoring</li>
+                                    <li><i class="text-success">✓</i> Website Quality Analysis</li>
+                                    <li><i class="text-success">✓</i> Contact Verification</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Demo Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h4 class="mb-0">🧪 Live Enhanced Scraping Demo</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="enhanced-scraping-form">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Industry</label>
+                                    <select class="form-select" id="industry" required>
+                                        <option value="HVAC">HVAC Services</option>
+                                        <option value="Dental">Dental Practices</option>
+                                        <option value="Legal">Legal Services</option>
+                                        <option value="Plumbing">Plumbing Services</option>
+                                        <option value="Accounting">Accounting Firms</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Location</label>
+                                    <input type="text" class="form-control" id="location" value="Austin, TX" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Lead Count</label>
+                                    <select class="form-select" id="count">
+                                        <option value="3">3 Leads</option>
+                                        <option value="5">5 Leads</option>
+                                        <option value="10">10 Leads</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-warning w-100">
+                                        <span class="btn-text">Generate Leads</span>
+                                        <div class="loading-spinner">
+                                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Progress Bar -->
+                        <div class="progress mt-3" style="display: none;" id="progress-container">
+                            <div class="progress-bar progress-enhanced" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="results-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h4 class="mb-0">✅ Enhanced Scraping Results</h4>
+                        </div>
+                        <div class="card-body">
+                            <!-- Stats Summary -->
+                            <div class="row mb-4" id="stats-summary">
+                                <!-- Stats will be populated here -->
+                            </div>
+
+                            <!-- Lead Results -->
+                            <div class="table-responsive">
+                                <table class="table table-dark table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Company</th>
+                                            <th>Contact</th>
+                                            <th>Email</th>
+                                            <th>Phone</th>
+                                            <th>Quality Score</th>
+                                            <th>Validation</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="leads-table-body">
+                                        <!-- Results will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhancement Details -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">🔧 Enhancement Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="text-warning">Quality Scoring Factors</h6>
+                                        <ul class="small">
+                                            <li>Company name professionalism</li>
+                                            <li>Business age and establishment</li>
+                                            <li>Contact information completeness</li>
+                                            <li>Website quality and presence</li>
+                                            <li>Industry specialization</li>
+                                            <li>Geographic relevance</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-warning">Validation Capabilities</h6>
+                                        <ul class="small">
+                                            <li>Email MX record validation</li>
+                                            <li>Phone number formatting</li>
+                                            <li>Website accessibility</li>
+                                            <li>SSL certificate checking</li>
+                                            <li>Business legitimacy scoring</li>
+                                            <li>Social media presence</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('enhanced-scraping-form');
+            const progressContainer = document.getElementById('progress-container');
+            const progressBar = document.querySelector('.progress-bar');
+            const resultsSection = document.getElementById('results-section');
+            const loadingSpinner = document.querySelector('.loading-spinner');
+            const btnText = document.querySelector('.btn-text');
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Show loading state
+                loadingSpinner.style.display = 'inline-block';
+                btnText.style.display = 'none';
+                progressContainer.style.display = 'block';
+                resultsSection.style.display = 'none';
+                
+                // Animate progress bar
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress > 90) progress = 90;
+                    progressBar.style.width = progress + '%';
+                }, 200);
+
+                try {
+                    const formData = {
+                        industry: document.getElementById('industry').value,
+                        location: document.getElementById('location').value,
+                        count: parseInt(document.getElementById('count').value)
+                    };
+
+                    const response = await fetch('/api/leads/generate-live', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+                    
+                    // Complete progress bar
+                    clearInterval(progressInterval);
+                    progressBar.style.width = '100%';
+                    
+                    setTimeout(() => {
+                        displayResults(result, formData);
+                        progressContainer.style.display = 'none';
+                    }, 500);
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error generating leads. Please try again.');
+                    clearInterval(progressInterval);
+                    progressContainer.style.display = 'none';
+                } finally {
+                    // Reset button state
+                    loadingSpinner.style.display = 'none';
+                    btnText.style.display = 'inline';
+                }
+            });
+
+            function displayResults(result, formData) {
+                if (!result.success) {
+                    alert('Failed to generate leads: ' + (result.error || 'Unknown error'));
+                    return;
+                }
+
+                // Show stats summary
+                const statsHtml = `
+                    <div class="col-md-3">
+                        <div class="card bg-primary">
+                            <div class="card-body text-center">
+                                <h4>${result.generated_count}</h4>
+                                <small>Generated Leads</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success">
+                            <div class="card-body text-center">
+                                <h4>${result.enhancement_stats.high_quality_count}</h4>
+                                <small>High Quality</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-dark">
+                            <div class="card-body text-center">
+                                <h4>${Math.round(result.enhancement_stats.average_quality)}</h4>
+                                <small>Average Quality</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info">
+                            <div class="card-body text-center">
+                                <h4>${result.enhancement_stats.enrichment_applied ? 'Yes' : 'No'}</h4>
+                                <small>Enhanced</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('stats-summary').innerHTML = statsHtml;
+
+                // Show lead results
+                const leadsHtml = result.leads.map(lead => `
+                    <tr>
+                        <td><strong>${lead.company_name}</strong></td>
+                        <td>${lead.contact_name}</td>
+                        <td><small>${lead.email}</small></td>
+                        <td><small>${lead.phone}</small></td>
+                        <td><span class="quality-score">${lead.quality_score}</span></td>
+                        <td>
+                            <span class="badge ${lead.quality_score >= 90 ? 'bg-success' : lead.quality_score >= 80 ? 'bg-warning' : 'bg-secondary'}">
+                                ${lead.quality_score >= 90 ? 'Excellent' : lead.quality_score >= 80 ? 'Good' : 'Standard'}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                document.getElementById('leads-table-body').innerHTML = leadsHtml;
+                resultsSection.style.display = 'block';
+                
+                // Scroll to results
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    </script>
+</body>
+</html>

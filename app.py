@@ -599,12 +599,25 @@ def generate_live_leads():
         
         logger.info(f"Starting live lead generation: {industry} in {location}")
         
-        # Import consolidated scraper
-        from scrapers import LeadScraper
+        # Import enhanced scraping engine
+        from scrapers.integration import enhanced_engine
         
-        # Generate legitimate business leads
-        scraper = LeadScraper()
-        scraped_leads = scraper.generate_leads(industry, location, max_leads)
+        # Generate enhanced business leads with data enrichment
+        scraping_result = enhanced_engine.generate_enhanced_leads(
+            industry=industry,
+            location=location,
+            max_leads=max_leads,
+            enable_enrichment=True
+        )
+        
+        if not scraping_result['success']:
+            return jsonify({
+                'success': False,
+                'error': scraping_result.get('error', 'Enhanced scraping failed'),
+                'generated_count': 0
+            })
+        
+        scraped_leads = scraping_result['leads']
         
         # Save leads to database
         saved_leads = []
@@ -655,8 +668,13 @@ def generate_live_leads():
             'generated_count': len(saved_leads),
             'scraped_count': len(scraped_leads),
             'leads': saved_leads,
-            'message': f'Successfully scraped and saved {len(saved_leads)} real {industry} leads from {location}',
-            'sources_used': ['Google Search', 'Yellow Pages', 'Business Websites']
+            'message': f'Successfully generated {len(saved_leads)} enhanced {industry} leads from {location}',
+            'sources_used': scraping_result['stats'].get('sources_used', ['Enhanced Scraping']),
+            'enhancement_stats': {
+                'enrichment_applied': scraping_result['stats'].get('enrichment_applied', False),
+                'average_quality': scraping_result['stats'].get('average_quality_score', 0),
+                'high_quality_count': scraping_result['stats'].get('high_quality_count', 0)
+            }
         })
     
     except Exception as e:
@@ -665,6 +683,81 @@ def generate_live_leads():
             'error': 'Failed to generate live leads',
             'details': str(e)
         }), 500
+
+@app.route('/api/enhanced-scraping-capabilities', methods=['GET'])
+def get_enhanced_scraping_capabilities():
+    """Get information about enhanced scraping capabilities"""
+    try:
+        from scrapers.integration import enhanced_engine
+        capabilities = enhanced_engine.get_scraping_capabilities()
+        
+        return jsonify({
+            'success': True,
+            'capabilities': capabilities,
+            'status': 'Enhanced scraping engine operational',
+            'version': '2.0',
+            'improvements': [
+                'Multi-source data collection from Google and business directories',
+                'Advanced quality scoring with 12+ factors',
+                'Real-time email deliverability validation',
+                'Business legitimacy verification',
+                'Website quality analysis and SSL checking',
+                'Industry-specific targeting and templates',
+                'Duplicate prevention across sources',
+                'Enhanced contact information validation'
+            ]
+        })
+    
+    except Exception as e:
+        logger.error(f"Enhanced scraping capabilities error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/enhanced-validate-lead', methods=['POST'])
+def enhanced_validate_lead_data():
+    """Validate and enrich existing lead data"""
+    try:
+        data = request.get_json() or {}
+        lead_id = data.get('lead_id')
+        
+        if not lead_id:
+            return jsonify({'error': 'Lead ID required'}), 400
+        
+        lead = Lead.query.get_or_404(lead_id)
+        
+        # Convert lead to dict for validation
+        lead_data = {
+            'company_name': lead.company_name,
+            'contact_name': lead.contact_name,
+            'email': lead.email,
+            'phone': lead.phone,
+            'website': lead.website,
+            'location': lead.location
+        }
+        
+        from scrapers.integration import enhanced_engine
+        validation_result = enhanced_engine.enricher.validate_business_legitimacy(lead_data)
+        
+        # Update lead with validation results
+        lead.validation_score = validation_result.get('legitimacy_score', 0)
+        lead.last_validated = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'lead_id': lead_id,
+            'validation_result': validation_result,
+            'message': 'Lead validation completed successfully'
+        })
+    
+    except Exception as e:
+        logger.error(f"Lead validation error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/enhanced-scraping-demo')
+def enhanced_scraping_demo():
+    """Demo page for enhanced scraping capabilities"""
+    return render_template('enhanced_scraping_demo.html')
 
 # Demo Endpoints for Testing (Keep for demonstration)
 @app.route('/api/demo/generate-leads', methods=['POST'])
