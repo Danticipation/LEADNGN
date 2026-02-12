@@ -75,8 +75,8 @@ CREATE INDEX idx_sent_emails_tracking_id ON sent_emails(tracking_id);
         "tracking_id": "uuid",
         "sent_email_id": 123,
         "tracking_enabled": true,
-        "tracking_pixel_url": "https://leadngn.replit.app/track/open/uuid",
-        "analytics_url": "https://leadngn.replit.app/api/email-tracking-stats?email_id=123"
+        "tracking_pixel_url": "https://yourdomain.com/track/open/uuid",
+        "analytics_url": "https://yourdomain.com/api/email-tracking-stats?email_id=123"
     }
 }
 ```

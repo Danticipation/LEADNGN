@@ -21,7 +21,7 @@ class EmailTracker:
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.base_url = "https://leadngn.replit.app"  # Update with your domain
+        self.base_url = "https://yourdomain.com"  # Update with your domain
     
     def generate_tracked_email(self, lead_id: int, template_type: str = 'introduction', 
                              user_id: str = 'system') -> Dict:
